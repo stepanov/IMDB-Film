@@ -19,5 +19,3 @@ is_deeply($obj->release_dates()->[0], {country => 'Russia', date => '27 June, 20
 $obj = new IMDB::Film(crit => 'eternal sunshine of the spotless mind', debug => 0);
 
 is_deeply($obj->release_dates()->[0], {country => 'USA', date => '19 March, 2004'}, 'Release Dates');
-
-warn Dumper $obj->release_dates();
