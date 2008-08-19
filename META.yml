@@ -1,0 +1,16 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         IMDB-Film
+version:      0.22
+version_from: lib/IMDB/BaseClass.pm
+installdirs:  site
+requires:
+    Cache::FileCache:              0
+    Carp:                          0
+    Digest::SHA1:                  0
+    Error:                         0
+    HTML::TokeParser:              2.28
+    LWP::Simple:                   1.41
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.30
