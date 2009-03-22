@@ -16,7 +16,7 @@ my %person_info = (
 				'year' 	=> '2006',
 				'code' 	=> '0317919'				
 	},
-	genres			=> ['Documentary', 'Drama', 'Talk-Show', 'Comedy'],
+	genres			=> ['Documentary', 'News', 'Talk-Show', 'Comedy'],
 	plot_keywords	=> ['Number In Title', 'TV Special', 'Awards Show', 'Non Fiction'],
 );
 

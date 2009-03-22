@@ -69,7 +69,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h5';
 
 BEGIN {
-	$VERSION = '0.34';
+	$VERSION = '0.36';
 }
 
 {

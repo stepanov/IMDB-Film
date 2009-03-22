@@ -29,7 +29,7 @@ use constant MAIN_TAG	=> 'h5';
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.34';
+	$VERSION = '0.36';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -64,8 +64,7 @@ use fields qw(	content
 				file
 				timeout
 				user_agent
-				_code
-				
+				_code				
 	);
 
 =head2 Constructor and initialization
@@ -478,7 +477,8 @@ sub _search_results {
 		my $href = $tag->[1]{href};
 		my $title = $parser->get_trimmed_text('a', $end_tag);
 		
-		next if $title =~ /\[IMG\]/i;
+		$self->_show_message("TITLE: " . $title, 'DEBUG');
+		next if $title =~ /\[IMG\]/i or $href =~ /pro.imdb.com/;
 
 		if(my($id) = $href =~ /$pattern/) {
 			$matched_hash{$id} = {title => $title, 'pos' => $count++};
@@ -486,11 +486,14 @@ sub _search_results {
 		}	
 	}
 
-	@matched = map { {title => $matched_hash{$_}->{title}, id => $_} } 
+	@matched = map { {title => $matched_hash{$_}->{title}, id => $_} }  
 				sort { $matched_hash{$a}->{'pos'} <=> $matched_hash{$b}->{'pos'} } keys %matched_hash;
 	
 	$self->matched(\@matched);
-	
+
+	$self->_show_message("matched: " . Dumper(\@matched), 'DEBUG');
+	$self->_show_message("guess: " . Dumper(\@guess_res), 'DEBUG');
+
 	my($title, $id);
 	if(@guess_res) {
 		($id, $title) = @guess_res;

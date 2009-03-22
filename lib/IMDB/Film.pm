@@ -53,7 +53,7 @@ use Carp;
 use Data::Dumper;
 
 use fields qw(	_title
-		_kind
+				_kind
 				_year
 				_episodes
 				_episodeof
@@ -91,7 +91,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.34';
+		$VERSION = '0.36';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -421,15 +421,15 @@ sub episodes {
 		}
 
 		my $parser = $self->_parser(FORCED, \$page);
-		while(my $tag = $parser->get_tag('a')) {
-			next unless $tag->[1]->{name} and $tag->[1]->{name} =~ /year/;
-			$parser->get_tag('h4');
-			my($season, $episode) = $parser->get_text =~ /Season\s+(.*?),\s+Episode\s+([^:]+)/;
+		while(my $tag = $parser->get_tag('h3')) {
+			my $id;
+            my($season, $episode);
+            next unless(($season, $episode) = $parser->get_text =~ /Season\s+(.*?),\s+Episode\s+([^:]+)/); 
 			my $imdb_tag = $parser->get_tag('a');
-			my($id) = $imdb_tag->[1]->{href} =~ /(\d+)/;
+			($id) = $imdb_tag->[1]->{href} =~ /(\d+)/ if $imdb_tag->[1]->{href};
 			my $title = $parser->get_trimmed_text;
-			$parser->get_tag('b');
-			my($date) = $parser->get_trimmed_text =~ /Original Air Date:\s+(.*)/;
+			$parser->get_tag('strong');
+			my($date) = $parser->get_trimmed_text;
 			$parser->get_tag('br');
 			my $plot = $parser->get_trimmed_text;
 			
@@ -703,14 +703,16 @@ sub rating {
 	if($forced) {
 		my $parser = $self->_parser(FORCED);
 	
-		while(my $tag = $parser->get_tag('b')) {
-			last if $parser->get_text =~ /rating/i;
+		while(my $tag = $parser->get_tag(MAIN_TAG)) {
+			last if $parser->get_text =~ /^User Rating/i;
 		}
 		
 		my $tag = $parser->get_tag('b');	
 		my $text = $parser->get_trimmed_text('b', '/a');
 
-		my($rating, $val) = $text =~ m!(\d*\.?\d*)\/.*?\((\d*\,?\d*)\s.*?\)?!;
+		$self->_show_message("Rating text is [$text]; tag: " . Dumper($tag), 'DEBUG');
+
+		my($rating, $val) = $text =~ m!(\d+\.?\d*)/10.*?(\d+,?\d*)!;
 		$val =~ s/\,// if $val;
 
 		$self->{_rating} = [$rating, $val];

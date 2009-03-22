@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 14;
+use Test::More tests => 17;
 
 use IMDB::Film;
 
@@ -16,7 +16,7 @@ my %films = (
 		language		=> [qw(English)],
 		plot			=> qq{An adaptation of Homer's great epic, the film follows the assault on Troy by the united Greek forces and chronicles the fates of the men involved.},
 		full_plot		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnom to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles, and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad."},
-		cover			=> qq{/images/M/MV5BMTU1MjM4NTA5Nl5BMl5BanBnXkFtZTcwOTE3NzA1MQ@@._V1._SX100_SY114_.jpg},
+		cover			=> qq{MV5BMTU1MjM4NTA5Nl5BMl5BanBnXkFtZTcwOTE3NzA1MQ@@._V1._SX100_SY114_.jpg},
 		cast			=> [{ 	id => '0002103', name => 'Julian Glover', role => 'Triopas'},	
 							{	id => '0004051', name => 'Brian Cox', role => 'Agamemnon'},	
 							{	id => '0428923', name => 'Nathan Jones', role => 'Boagrius'},	
@@ -39,6 +39,8 @@ my %films = (
 							{id => '1125275', name => 'David Benioff'}],
 		duration		=> '163 min',
 		aspect_ratio	=> '2.35 : 1',
+		rating			=> '6.9',
+		votes			=> '98918',
 );
 
 my %pars = (cache => 0, debug => 0, crit => $crit);
@@ -51,7 +53,7 @@ is($obj->id, $films{id}, 'Movie IMDB ID');
 is($obj->title, $films{title}, 'Movie Title');
 is($obj->year, $films{year}, 'Movie Production Year');
 like($obj->plot, qr/$films{plot}/, 'Movie Plot');
-like($obj->cover, qr/$films{cover}/, 'Movie Cover');
+like($obj->cover, '/\.jpg/i', 'Movie Cover');
 is_deeply($obj->cast, $films{cast}, 'Movie Cast');
 is($obj->language->[0], $films{language}[0], 'Movie Language');
 is($obj->country->[0], $films{country}[0], 'Movie Country');
@@ -59,3 +61,8 @@ is($obj->genres->[0], $films{genres}[0], 'Movie Genre');
 like($obj->full_plot, qr/$films{full_plot}/, 'Movie full plot');
 is($obj->duration, $films{duration}, 'Movie Duration');
 is($obj->aspect_ratio, $films{aspect_ratio}, 'Movie Aspect Ratio');
+
+my($rating, $votes) = $obj->rating();
+cmp_ok($rating, '>=', $films{rating}, 'Rating');
+cmp_ok($votes, '>=', $films{votes}, 'Votes');
+cmp_ok($obj->rating(), '>=', $films{rating}, 'Rating');
