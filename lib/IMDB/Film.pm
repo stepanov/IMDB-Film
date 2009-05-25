@@ -78,6 +78,7 @@ use fields qw(	_title
 				_official_sites
 				_release_dates
 				_aspect_ratio
+				_mpaa_info
 				full_plot_url
 		);
 	
@@ -91,7 +92,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.36';
+		$VERSION = '0.37';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -935,6 +936,32 @@ sub awards {
 	$self->{_awards} = $self->_get_simple_prop('awards') unless $self->{_awards};
 
 	return $self->{_awards};
+}
+
+=item mpaa_info()
+
+Return a MPAA for the specified move:
+
+	my mpaa = $film->mpaa_info();
+
+=cut
+sub mpaa_info {
+	my CLASS_NAME $self = shift;
+	unless($self->{_mpaa_info}) {
+	
+		my $parser = $self->_parser(FORCED);
+
+        while(my $tag = $parser->get_tag(MAIN_TAG)) {
+        	my $text = $parser->get_trimmed_text(MAIN_TAG, '/a');
+            last if $text =~ /^mpaa/i;
+        }
+
+		my $mpaa = $parser->get_trimmed_text('/div');
+		$mpaa =~ s/^:\s//;
+		$self->{_mpaa_info} = $mpaa;
+	}
+
+	return $self->{_mpaa_info};
 }
 
 =item aspect_ratio()

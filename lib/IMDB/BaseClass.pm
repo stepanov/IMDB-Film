@@ -25,11 +25,12 @@ use Carp;
 use Data::Dumper;
 
 use constant MAIN_TAG	=> 'h5';
+use constant ID_LENGTH	=> 6;
 
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.36';
+	$VERSION = '0.37';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -374,7 +375,7 @@ sub _content {
 				$self->_show_message("Retrieving page from internet ...", 'DEBUG');
 					
 				my $url = 'http://'.$self->_host().'/'.
-						( $crit =~ /^\d+$/ ? $self->_query() : $self->_search() ).$crit;				
+						( $crit =~ /^\d+$/ && length($crit) >= ID_LENGTH ? $self->_query() : $self->_search() ).$crit;				
 				
 				$page = $self->_get_page_from_internet($url);
 				$self->status(FROM_INTERNET);

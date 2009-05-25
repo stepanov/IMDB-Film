@@ -1,6 +1,7 @@
 use Test::More tests => 11;
 
 use IMDB::Persons;
+use Data::Dumper;
 
 my %person_info = (
 	code           	=> '0000129',
@@ -32,16 +33,15 @@ like($p->photo, qr/$person_info{photo}/, 'photo');
 
 my $list = $p->filmography();
 my $f = 0;
-for (@$list) {
-
-	if($_->{title} eq $person_info{film}->{title}) {
-		is($_->{code}, $person_info{film}->{code}, 'movie code');
-		is($_->{year}, $person_info{film}->{year}, 'movie code');
-		is($_->{role}, $person_info{film}->{role}, 'movie code');
+for my $movie(@{$list->{'Actor'}}) {
+	if($movie->{title} eq $person_info{film}->{title}) {
+		is($movie->{code}, $person_info{film}->{code}, 'movie code');
+		is($movie->{year}, $person_info{film}->{year}, 'movie code');
+		is($movie->{role}, $person_info{film}->{role}, 'movie code');
 		$f = 1;
 		last;
 	}
-}
+}	
 
 is($f, 1, 'filmography');
 is_deeply($p->genres, $person_info{genres}, 'Person genres');

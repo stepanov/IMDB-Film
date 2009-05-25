@@ -69,7 +69,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h5';
 
 BEGIN {
-	$VERSION = '0.36';
+	$VERSION = '0.37';
 }
 
 {
@@ -275,19 +275,22 @@ sub photo {
 
 =item filmography()
 
-Returns a person's filmography as array of hashes with a following
-structure: 
+Returns a person's filmography as a hash of arrays with following structure: 
 
 	my $fg = $person->filmography();
 
 	__DATA__
-	$fg = [
+	$fg = {
+		'Section' => [
 			{ 	title 	=> 'movie title', 
 				role 	=> 'person role', 
 				year 	=> 'year of movie production',
 				code	=> 'IMDB code of movie',	
 			}
-	];
+		];
+	}
+
+The section can be In Development, Actor, Self, Thanks, Archive Footage, Producer etc.
 
 =cut
 sub filmography {
@@ -301,22 +304,34 @@ sub filmography {
 			my $text = $parser->get_text;
 			last if $text && $text =~ /filmography/i;
 		}	
-
+		
+		my $key = 'Unknown';
 		while(my $tag = $parser->get_tag()) {
 		
-			last if $tag->[0] eq '/ol';
+			last if $tag->[0] eq 'script'; # Netx section after filmography
 			
+			if($tag->[0] eq 'h5') {
+				my $caption = $parser->get_trimmed_text('h5', '/a');
+				
+				$key = $caption if $caption;
+				$key =~ s/://;
+
+				$self->_show_message("FILMOGRAPHY: key=$key; caption=$caption; trimmed=".$parser->get_trimmed_text('h5', '/a'), 'DEBUG');
+			}	
+		
 			if($tag->[0] eq 'a' && $tag->[1]->{href} && $tag->[1]{href} =~ m!title\/tt(\d+)!) {
 				my $title = $parser->get_text();
 				my $text = $parser->get_trimmed_text('br', '/li');
-				
+			
+				$self->_show_message("link: $title --> $text", 'DEBUG');
+
 				my $code = $1;
 				my($year, $role) = $text =~ m!\((\d+)\)\s.+\.+\s(.+)!;
-				push @$films, {	title 	=> $title, 
-								code 	=> $code,
-								year	=> $year,
-								role	=> $role,
-							};
+				push @{$films->{$key}}, {	title 	=> $title, 
+											code 	=> $code,
+											year	=> $year,
+											role	=> $role,
+										};
 			} 
 		}
 
