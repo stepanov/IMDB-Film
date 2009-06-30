@@ -1,5 +1,11 @@
 Revision history for Perl module IMDB::Film
 
+0.38 June 30 2009
+	- fixed issue with empty cast list (thanks to Andréas Bratell);
+	- fixed issue with retrieving metadata for movies with code less then 7
+	digits (thanks to Simon), ticket #47422;
+	- fixed POD documentation (thanks to Bas Zoetekouw), ticket #47433).
+
 0.37 May 25 2009
 	- added MPAA info for the specified movie;
 	- fixed issue with retrieving of filmography for the specified actor or

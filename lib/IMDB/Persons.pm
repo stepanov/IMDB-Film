@@ -69,7 +69,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h5';
 
 BEGIN {
-	$VERSION = '0.37';
+	$VERSION = '0.38';
 }
 
 {
@@ -410,6 +410,8 @@ sub DESTROY {
 1;
 
 __END__
+
+=back
 
 =head1 EXPORTS
 

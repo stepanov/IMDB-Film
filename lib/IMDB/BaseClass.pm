@@ -30,7 +30,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.37';
+	$VERSION = '0.38';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -356,7 +356,7 @@ sub _content {
 		my $crit = shift || '';
 		my $page;
 	
-		$self->code($crit) if $crit =~ /^\d{7}$/;
+		$self->code($crit) if $crit =~ /^\d{6,8}$/;
 		$page = $self->_cacheObj()->get($crit) if $self->_cache();
 		
 		$self->_show_message("CRIT: $crit", 'DEBUG');
@@ -578,6 +578,8 @@ sub DESTROY {
 1;
 
 __END__
+
+=back
 
 =head1 EXPORTS
 

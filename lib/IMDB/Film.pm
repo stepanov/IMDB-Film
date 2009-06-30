@@ -92,7 +92,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.37';
+		$VERSION = '0.38';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -352,17 +352,15 @@ sub title {
 			$self->retrieve_code($parser, '/pro.imdb.com/title/tt(\d+)') 
 														unless $self->code;
 			$title =~ s/\*/\\*/g;
-			
+		
 			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\(([\d\?]{4}).*?\)(?:\s+\((.*?)\))?!;
 			$self->{_kind} = '' unless $self->{_kind};
 			
-        		#"The Series" An Episode (2005)
-			#"The Series" (2005)
-        		if( $self->{_title} =~ /\"[^\"]+\"(\s+.+\s+)?/ ) {
-        			$self->{_kind} = $1 ? 'E' : 'S';
-        		}
-        		
-			
+       		# "The Series" An Episode (2005)
+			# "The Series" (2005)
+       		if( $self->{_title} =~ /\"[^\"]+\"(\s+.+\s+)?/ ) {
+       			$self->{_kind} = $1 ? 'E' : 'S';
+       		}		
 		}	
 	}	
 	
@@ -745,14 +743,16 @@ sub cast {
 		while($tag = $parser->get_tag('table')) {
 			last if $tag->[1]->{class} && $tag->[1]->{class} =~ /cast/i;
 		}
-		
+
 		while($tag = $parser->get_tag('a')) {
+
 			last if $tag->[1]{href} =~ /fullcredits/i;
-			if($tag->[1]{href} && !$tag->[1]{onclick} && $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
+			if($tag->[1]{href} && $tag->[1]{onclick} && $tag->[1]{onclick} =~ /castlist/ 
+													&& $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
 				$person = $parser->get_text;
 				$id = $1;	
 				my $text = $parser->get_trimmed_text('/tr');
-
+				
 				($role) = $text =~ /.*?\s+(.*)$/;			
 				push @cast, {id => $id, name => $person, role => $role};
 			}	
