@@ -30,7 +30,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.38';
+	$VERSION = '0.39';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -450,11 +450,13 @@ sub _get_simple_prop {
 		last if $text =~ /$target/i;
 	}
 
-	my $end_tag = $target eq 'trivia' ? '/div' : 'a';
+	my $end_tag = $target eq 'trivia' ? '/div' : '/a';
 
 	my $res = $parser->get_trimmed_text($end_tag);	
 
-	$self->_show_message($res, 'DEBUG');
+	$res =~ s/\s+more$//;
+
+	$self->_show_message("RES: $res", 'DEBUG');
 	
 	return $res;
 }

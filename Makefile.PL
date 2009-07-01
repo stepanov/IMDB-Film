@@ -3,13 +3,14 @@ use ExtUtils::MakeMaker;
 use strict;
 
 my $online_tests = ExtUtils::MakeMaker::prompt('Do you want to perform online tests during "make test" phase?', 'no') =~ /^\s*(y)/i;
-
 my $tests = join ' ', glob ($online_tests ? 't/0*.t t/m*.t' : 't/0*.t');
 
 if($online_tests) {
 	my $person_test = ExtUtils::MakeMaker::prompt('Do you want to perform online tests for IMDB persons during "make test" phase?', 'no') =~ /^\s*(y)/i;
-
 	$tests .= ' ' . join ' ', glob 't/p*.t' if $person_test;
+	
+	my $extra_test = ExtUtils::MakeMaker::prompt('Do you want to perform extra online tests during "make test" phase?', 'no') =~ /^\s*(y)/i;
+	$tests .= ' ' . join ' ', glob 't/n*.t' if $extra_test;	
 }
 
 WriteMakefile(

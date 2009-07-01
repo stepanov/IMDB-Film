@@ -79,6 +79,9 @@ use fields qw(	_title
 				_release_dates
 				_aspect_ratio
 				_mpaa_info
+				_company
+				_connections
+				_full_companies
 				full_plot_url
 		);
 	
@@ -92,7 +95,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.38';
+		$VERSION = '0.39';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -393,6 +396,161 @@ sub year {
 	return $self->{_year};
 }
 
+=item connections()
+
+Retrieve connections for the movie as an arrays of hashes with folloeing structure
+
+ 	{ 
+ 		follows 		=> [ { id => <id>, title => <name>, year => <year>, ...,  } ],
+  		followed_by  	=> [ { id => <id>, title => <name>, year => <year>, ...,  } ],
+  		references 		=> [ { id => <id>, title => <name>, year => <year>, ...,  } ],
+  		referenced_in 	=> [ { id => <id>, title => <name>, year => <year>, ...,  } ],
+  		featured_in 	=> [ { id => <id>, title => <name>, year => <year>, ...,  } ],
+  		spoofed_by 		=> [ { id => <id>, title => <name>, year => <year>, ...,  } ],
+	}
+
+  	my %connections = %{ $film->connections() };
+
+=cut
+sub connections {
+  	my CLASS_NAME $self = shift;
+
+  	unless($self->{_connections}) {
+    	my $page;
+    	$page = $self->_cacheObj->get($self->code . '_connections') if $self->_cache;
+
+    	unless($page) {
+      		my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/movieconnections";
+      		$self->_show_message("URL for movie connections is $url ...", 'DEBUG');
+
+      		$page = $self->_get_page_from_internet($url);
+      		$self->_cacheObj->set($self->code.'_connections', $page, $self->_cache_exp) if $self->_cache;
+    	}
+
+    	my $parser = $self->_parser(FORCED, \$page);
+
+    	my $group = undef;
+    	my %result;
+    	my @lookFor = ('h5');
+   	 	while (my $tag = $parser->get_tag(@lookFor)) {
+      		if ($tag->[0] eq 'h5') {
+        		$group = $parser->get_text;
+				$group = lc($group);
+				$group =~ s/\s+/_/g;
+        		$result{$group} = [];
+        		@lookFor = ('h5', 'a', 'hr', 'hr/');
+      		} elsif ($tag->[0] eq 'a') {
+        		my($id) = $tag->[1]->{href} =~ /(\d+)/;
+        		my $name = $parser->get_trimmed_text;
+
+        		# Handle series episodes (usually in 'referenced' sections)
+        		my($series,$t,$s,$e) = ($name =~ /^"(.*?): *(.*?) *\(#(\d+)\.(\d+)\)"$/);
+          		$name = $series if defined $series;
+        	
+				$tag = $parser->get_tag('/a');
+				my $next = $parser->get_trimmed_text();
+				my %film = ('id' => $id, 'title' => $name);
+				if(defined $t) {
+					$film{'series_title'} = $t;
+					$film{'season'} = $s;
+					$film{'episode'} = $e;
+				}
+
+				$film{'year'} = $1 if $next =~ /\((\d{4})\)/;				
+				next if ($next =~ /\(VG\)/);
+				push @{$result{$group}}, \%film;
+      		} else {
+        		# Stop when we hit the divider
+        		last;
+      		}
+    	}
+    	
+		$self->{_connections} = \%result;
+  	}
+
+  	return $self->{_connections};
+}
+
+
+=item full_companies()
+
+Retrieve companies for the movie as an array where each item has following stucture:
+
+	{ 
+		production 		=> [ { name => <company name>, url => <imdb url>, extra => <specific task> } ],
+  		distributors  	=> [ { name => <company name>, url => <imdb url>, extra => <specific task> } ],
+ 	 	special_effects => [ { name => <company name>, url => <imdb url>, extra => <specific task> } ],
+  		other 			=> [ { name => <company name>, url => <imdb url>, extra => <specific task> } ],
+	}
+
+  my %full_companies = %{ $film->full_companies() };
+
+=cut
+sub full_companies {
+  	my CLASS_NAME $self = shift;
+
+  	unless($self->{_full_companies}) {
+    	my $page;
+    	$page = $self->_cacheObj->get($self->code . '_full_companies') if $self->_cache;
+
+    	unless($page) {
+      		my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/companycredits";
+      		$self->_show_message("URL for company credits is $url ...", 'DEBUG');
+
+      		$page = $self->_get_page_from_internet($url);
+      		$self->_cacheObj->set($self->code.'_full_companies', $page, $self->_cache_exp) if $self->_cache;
+    	}
+
+   	 	my $parser = $self->_parser(FORCED, \$page);
+    	my $group = undef;
+    	my %result;
+    	my @lookFor = ('h2');
+    	while (my $tag = $parser->get_tag(@lookFor)) {
+      		if ($tag->[0] eq 'h2') {
+        		$group = $parser->get_text;
+        		$group =~ s/ compan(y|ies)//i;
+        		$group =~ tr/A-Z/a-z/;
+        		$group =~ s/\s+/_/g;
+        		$result{$group} = [];
+        		@lookFor = ('h2', 'a', 'hr', 'hr/');
+      		} elsif($tag->[0] eq 'a') {
+        	
+			my($url) = $tag->[1]->{href};
+			my $name = $parser->get_trimmed_text;
+
+				$tag = $parser->get_tag('/a');
+				my $next = $parser->get_trimmed_text();
+				$next =~ s/^[\t \xA0]+//; # nbsp comes out as \xA0
+				my %company = ( 'url' => $url,
+								'name' => $name,
+								'extra' => $next );
+				push @{$result{$group}}, \%company;
+			} else {
+				# Stop when we hit the divider
+				last;
+			}
+    	}
+    
+		$self->{_full_companies} = \%result;
+  	}
+
+  	return $self->{_full_companies};
+}
+
+=item company()
+
+Returns an company given for a specified movie:
+
+  my $company = $film->company();
+
+=cut
+sub company {
+  	my CLASS_NAME $self = shift;
+
+  	$self->{_company} = $self->_get_simple_prop('company') unless $self->{_company};
+  	
+	return $self->{_company};
+}
 
 =item episodes()
 
@@ -1145,9 +1303,11 @@ Returns a list of release dates of specified movie as array reference:
 	
 	my $sites = $film->release_dates();
 	for(@$sites) {
-		my($country, $date) = each %$_;
-		print "Country - $country; release date - $date\n";
+		my($country, $date, $info) = each %$_;
+		print "Country - $country; release date - $date; info - $info\n";
 	}
+
+Option info contains additional information about release - DVD premiere, re-release, restored version etc	
 
 =cut
 sub release_dates {
@@ -1166,22 +1326,29 @@ sub release_dates {
 		}
 
 		my $parser = $self->_parser(FORCED, \$page);
+		# Searching header of release dates table
 		while(my $tag = $parser->get_tag('th')) {
 			last if $tag->[1]->{class} && $tag->[1]->{class} eq 'xxxx';
 		}
-
+		
+		#
+		# The table has three columns. So we parse then one by one and grab their text
+		#
+		my $count = 0;
+		my @dates = ();
 		while(my $tag = $parser->get_tag()) {
-			last if $tag->[0] eq '/table';
-			next unless $tag->[0] eq 'a' and $tag->[1]->{href} =~ /Recent/;
-			my $country = $parser->get_text;
-			my $date_tag = $parser->get_tag('a');
-			my $date = $parser->get_text;
-			my $year_tag = $parser->get_tag('a');
-			my $year = $parser->get_text;
+			last if $tag->[0] eq '/table';			
+			next unless $tag->[0] eq 'td';
 
-			$self->_show_message("country=$country; date=$date, $year", 'DEBUG');
-
-			push @{ $self->{_release_dates} }, {country => $country, date => "$date, $year"};
+			$dates[$count] = $parser->get_trimmed_text('/td');
+			
+			# When rish 3rd column we should store dates into object property
+			if(++$count > 2) {
+				$dates[2] =~ s/\)\s\(/, /g;
+				$dates[2] =~ s/(\(|\))//g;
+				push @{ $self->{_release_dates} }, {country => $dates[0], date => $dates[1], info => $dates[2]};
+				$count = 0;
+			}	
 		}
 	}
 

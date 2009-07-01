@@ -1,5 +1,14 @@
 Revision history for Perl module IMDB::Film
 
+0.39 July 03
+	- added additional attributes such "re-release", "DVD premiere" etc from
+	the release date page (requested by Vincent Lefevre, ticket #47457);
+	- added support for companies and movie connections (thanks to Justin for
+	the patch, ticket #42756);
+	- fixed retrieving release date information (reported by Vincent Lefevre,
+	ticket #47457);
+	- reorganize tests.
+
 0.38 June 30 2009
 	- fixed issue with empty cast list (thanks to Andréas Bratell);
 	- fixed issue with retrieving metadata for movies with code less then 7

@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 20;
+use Test::More tests => 21;
 
 use IMDB::Film;
 
@@ -14,6 +14,7 @@ my %films = (
 		genres			=> [qw(Action Drama War Adventure Romance)],
 		country 		=> [qw(USA Malta UK)],
 		language		=> [qw(English)],
+		company			=> 'Warner Bros. Pictures',
 		duration		=> '163 min',
 		plot			=> qq{An adaptation of Homer's great epic, the film follows the assault on Troy by the united Greek forces and chronicles the fates of the men involved.},
 		full_plot		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnom to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles, and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad."},
@@ -59,6 +60,7 @@ is($obj->genres->[0], $films{genres}[0], 'Movie Genre');
 like($obj->full_plot, qr/$films{full_plot}/, 'Movie full plot');
 is($obj->duration, $films{duration}, 'Movie Duration');
 is($obj->mpaa_info, $films{mpaa_info}, 'MPAA');
+is($obj->company, $films{company}, 'Company');
 
 my($rate, $num) = $obj->rating();
 like($rate, qr/\d+/, 'Movie rating');
