@@ -5,13 +5,14 @@ IMDB::BaseClass - a base class for IMDB::Film and IMDB::Persons.
 =head1 SYNOPSIS
 
   use base qw(IMDB::BaseClass);
-  
+
 =head1 DESCRIPTION
 
 IMDB::BaseClass implements a base functionality for IMDB::Film
 and IMDB::Persons.
 
 =cut
+
 package IMDB::BaseClass;
 
 use strict;
@@ -30,7 +31,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.39';
+	$VERSION = '0.40';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -83,12 +84,13 @@ or
 	my $imdb = new IMDB::Film(crit => <some title>);
 
 Also, you can specify following optional parameters:
-	
+
 	- proxy - define proxy server name and port;
 	- debug	- switch on debug mode (on by default);
 	- cache - cache or not of content retrieved pages.
 
 =cut
+
 sub new {
 	my $caller = shift;
 	my $class = ref($caller) || $caller;
@@ -103,6 +105,7 @@ Initialize object. It gets list of service class properties and assign value to 
 parameters or from the hash with default values.
 
 =cut
+
 sub _init {
 	my CLASS_NAME $self = shift;
 	my %args = @_;
@@ -138,6 +141,7 @@ Define an user agent for HTTP request. It's 'Mozilla/5.0' by default.
 For more information refer to LWP::UserAgent.
 
 =cut
+
 sub user_agent {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{user_agent} = shift }
@@ -150,12 +154,12 @@ Define a timeout for HTTP request in seconds. By default it's 10 sec.
 For more information refer to LWP::UserAgent.
 
 =cut
+
 sub timeout {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{timeout} = shift }
 	return $self->{timeout}
 }
-
 
 =item code()
 
@@ -164,6 +168,7 @@ Get IMDB film code.
 	my $code = $film->code();
 
 =cut
+
 sub code {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{_code} = shift }
@@ -177,6 +182,7 @@ Get IMDB film id (actually, it's the same as code).
 	my $id = $film->id();
 
 =cut
+
 sub id {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{_code} = shift }
@@ -194,8 +200,9 @@ or you can define environment variable 'http_host'. For exanple, for Linux
 you shoud do a following:
 
 	export http_proxy=my.proxy.host:8080
-	
+
 =cut
+
 sub _proxy {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{proxy} = shift }
@@ -205,10 +212,11 @@ sub _proxy {
 =item _cache()
 
 Store cache flag. Indicate use file cache to store content page or not:
-	
+
 	my $imdb = new IMDB::Film(code => 111111, cache => 1);
 
 =cut
+
 sub _cache {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{cache} = shift }
@@ -222,6 +230,7 @@ Store flag clear_cache which is indicated clear exisisting cache or not (false b
 	my $imdb = new IMDB::Film(code => 111111, cache => 1, clear_cache => 1);
 
 =cut
+
 sub _clear_cache {
 	my CLASS_NAME $self = shift;
 	if($_) { $self->{clear_cache} = shift }
@@ -234,6 +243,7 @@ In case of using cache, we create new Cache::File object and store it in object'
 propery. For more details about Cache::File please see Cache::Cache documentation.
 
 =cut
+
 sub _cacheObj {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{cacheObj} = shift }
@@ -249,6 +259,7 @@ In case of using cache, we can define value time of cache expire.
 For more details please see Cache::Cache documentation.
 
 =cut
+
 sub _cache_exp {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{cache_exp} = shift }
@@ -278,12 +289,13 @@ sub _show_message {
 =item _host()
 
 Store IMDB host name. You can pass this value in object constructor:
-		
+
 	my $imdb = new IMDB::Film(code => 111111, host => 'us.imdb.com');
 
 By default, it uses 'www.imdb.com'.
 
 =cut
+
 sub _host {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{host} = shift }
@@ -303,6 +315,7 @@ B<Note: this is a mainly service parameter. So, there is no reason to pass it in
 real case.>
 
 =cut
+
 sub _query {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{query} = shift }
@@ -319,6 +332,7 @@ different value for that:
 Default value is 'Find?select=Titles&for='.
 
 =cut	
+
 sub _search {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{search} = shift }
@@ -328,12 +342,13 @@ sub _search {
 =item _debug()
 
 Indicate to use DEBUG mode to display some debug messages:
-	
+
 	my $imdb = new IMDB::Film(code => 111111, debug => 1);
 
 By default debug mode is switched off.	
 
 =cut
+
 sub _debug {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{debug} = shift }
@@ -350,6 +365,7 @@ cache then retrieve page from the cache else store content of the
 page in the cache.
 
 =cut
+
 sub _content {
 	my CLASS_NAME $self = shift;
 	if(@_) {
@@ -416,6 +432,7 @@ we should every time initialize parser using stored content of page.
 For more information please see HTML::TokeParser documentation.
 
 =cut
+
 sub _parser {	
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -436,6 +453,7 @@ sub _parser {
 Retrieve a simple movie property which surrownded by <B>.
 
 =cut
+
 sub _get_simple_prop {
 	my CLASS_NAME $self = shift;
 	my $target = shift || '';
@@ -460,11 +478,6 @@ sub _get_simple_prop {
 	
 	return $res;
 }
-
-
-=back
-
-=cut
 
 sub _search_results {
 	my CLASS_NAME $self = shift;
@@ -521,6 +534,7 @@ Retrieve list of matched films each element of which is hash reference -
 Note: if movie was matched by title unambiguously it won't be present in this array!	
 
 =cut
+
 sub matched {
 	my CLASS_NAME $self = shift;
 	if(@_) { $self->{matched} = shift }
@@ -559,6 +573,7 @@ Return string which contains error messages separated by \n:
 	my $errors = $film->error();
 
 =cut
+
 sub error {
 	my CLASS_NAME $self = shift;
 	if(@_) { push @{ $self->{error} }, shift() }

@@ -1,5 +1,9 @@
 Revision history for Perl module IMDB::Film
 
+0.40 July 11
+	- added top info into rating array (requested by Geoffrey Hoffman);
+	- fixed pod errors (thanks to Bas Zoetekouw, ticket #47433).
+
 0.39 July 03
 	- added additional attributes such "re-release", "DVD premiere" etc from
 	the release date page (requested by Vincent Lefevre, ticket #47457);

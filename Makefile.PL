@@ -11,6 +11,9 @@ if($online_tests) {
 	
 	my $extra_test = ExtUtils::MakeMaker::prompt('Do you want to perform extra online tests during "make test" phase?', 'no') =~ /^\s*(y)/i;
 	$tests .= ' ' . join ' ', glob 't/n*.t' if $extra_test;	
+	
+	my $pod_test = ExtUtils::MakeMaker::prompt('Do you want to perform POD checking during "make test" phase?', 'no') =~ /^\s*(y)/i;
+	$tests .= ' ' . join ' ', glob 't/y*.t' if $pod_test;	
 }
 
 WriteMakefile(
@@ -23,6 +26,7 @@ WriteMakefile(
 							'Carp'				=> 0,
 							'Error'				=> 0,
 							'Digest::SHA1'		=> 0,
+							'Pod::Checker'		=> 0,
 					}, 
 					
     test           => {TESTS => $tests},

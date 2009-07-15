@@ -13,14 +13,14 @@ from IMDB.com
 	my $person = new IMDB::Persons(crit => '0000129');
 
 	or 
-	
+
 	#
 	# Retrieve a person information by name
 	#
   	my $person = new IMDB::Persons(crit => 'Tom Cruise');
 
 	or 
-	
+
 	#
 	# Process already stored HTML page from IMDB
 	#
@@ -40,6 +40,7 @@ IMDB persons (actors, actresses, directors etc): full name,
 photo, date and place of birth, mini bio and filmography.
 
 =cut
+
 package IMDB::Persons;
 
 use strict;
@@ -69,7 +70,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h5';
 
 BEGIN {
-	$VERSION = '0.39';
+	$VERSION = '0.40';
 }
 
 {
@@ -103,6 +104,7 @@ BEGIN {
 Initialize a new object.
 
 =cut
+
 sub _init {
 	my CLASS_NAME $self = shift;
 	my %args = @_;	
@@ -123,6 +125,7 @@ sub _init {
 Implements a logic to search IMDB persons by their names.
 
 =cut
+
 sub _search_person {
 	my CLASS_NAME $self = shift;
 
@@ -148,6 +151,7 @@ Retrieve a person full name
 	my $person_name = $person->name();
 
 =cut
+
 sub name {
 	my CLASS_NAME $self = shift;
 	if(!defined $self->{'_name'}) {	
@@ -184,6 +188,7 @@ Returns a mini bio for specified IMDB person
 	my $mini_bio = $person->mini_bio();
 
 =cut
+
 sub mini_bio {
 	my CLASS_NAME $self = shift;
 	if(!defined $self->{_mini_bio}) {
@@ -207,6 +212,7 @@ Returns a date of birth of IMDB person in format 'day' 'month caption' 'year':
 	my $d_birth = $person->date_of_birth();
 
 =cut
+
 #TODO: add date convertion in different formats.
 sub date_of_birth {
 	my CLASS_NAME $self = shift;
@@ -245,6 +251,7 @@ Returns a name of place of the birth
 	my $place = $person->place_of_birth();
 
 =cut
+
 sub place_of_birth {
 	my CLASS_NAME $self = shift;
 	return $self->{'_date_of_birth'}{'place'};
@@ -257,6 +264,7 @@ Return a path to the person's photo
 	my $photo = $person->photo();
 
 =cut
+
 sub photo {
 	my CLASS_NAME $self = shift;
 	if(!defined $self->{'_photo'}) {
@@ -293,6 +301,7 @@ Returns a person's filmography as a hash of arrays with following structure:
 The section can be In Development, Actor, Self, Thanks, Archive Footage, Producer etc.
 
 =cut
+
 sub filmography {
 	my CLASS_NAME $self = shift;
 	
@@ -351,6 +360,7 @@ Retrieve a list of movie genres for specified person:
 	my $genres = $persons->genres;
 
 =cut
+
 sub genres {
 	my CLASS_NAME $self = shift;
 
@@ -369,6 +379,7 @@ Retrieve a list of keywords for movies where specified person plays:
 	my $keywords = $persons->plot_keywords;
 
 =cut
+
 sub plot_keywords {
 	my CLASS_NAME $self = shift;
 

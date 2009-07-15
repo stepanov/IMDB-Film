@@ -5,14 +5,14 @@ IMDB::Film - OO Perl interface to the movies database IMDB.
 =head1 SYNOPSIS
 
 	use IMDB::Film;
-	
+
 	#
 	# Retrieve a movie information by its IMDB code
 	#
 	my $imdbObj = new IMDB::Film(crit => 227445);
 
 	or
-	
+
 	#
 	# Retrieve a movie information by its title
 	#
@@ -42,6 +42,7 @@ You can use that module to retrieve information about film:
 title, year, plot etc. 
 
 =cut
+
 package IMDB::Film;
 
 use strict;
@@ -95,7 +96,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.39';
+		$VERSION = '0.40';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -168,6 +169,7 @@ For more infomation about base methods refer to IMDB::BaseClass.
 Initialize object.
 
 =cut
+
 sub _init {
 	my CLASS_NAME $self = shift;
 	my %args = @_;
@@ -294,6 +296,7 @@ sub fields {
 Implemets functionality to search film by name.
 
 =cut
+
 sub _search_film {
 	my CLASS_NAME $self = shift;
 	my $args = shift || {};
@@ -336,6 +339,7 @@ matched films and continue to process first one:
 	my $title = $film->title();
 
 =cut
+
 sub title {	
 	my CLASS_NAME $self = shift;
 	my $forced 	= shift || 0;
@@ -373,12 +377,13 @@ sub title {
 =item kind()
 
 Get kind of movie:
-	
+
 	my $kind = $film->kind();
-	
+
 	Possible values are: 'movie', 'tv series', 'tv mini series', 'video game', 'video movie', 'tv movie', 'episode'.
 
 =cut
+
 sub kind {
 	my CLASS_NAME $self = shift;
 	return $FILM_KIND{$self->{_kind}};
@@ -387,10 +392,11 @@ sub kind {
 =item year()
 
 Get film year:
-	
+
 	my $year = $film->year();
 
 =cut
+
 sub year {
 	my CLASS_NAME $self = shift;
 	return $self->{_year};
@@ -412,6 +418,7 @@ Retrieve connections for the movie as an arrays of hashes with folloeing structu
   	my %connections = %{ $film->connections() };
 
 =cut
+
 sub connections {
   	my CLASS_NAME $self = shift;
 
@@ -486,6 +493,7 @@ Retrieve companies for the movie as an array where each item has following stuct
   my %full_companies = %{ $film->full_companies() };
 
 =cut
+
 sub full_companies {
   	my CLASS_NAME $self = shift;
 
@@ -544,6 +552,7 @@ Returns an company given for a specified movie:
   my $company = $film->company();
 
 =cut
+
 sub company {
   	my CLASS_NAME $self = shift;
 
@@ -560,6 +569,7 @@ Retrieve episodes info list each element of which is hash reference for tv serie
 	my @episodes = @{ $film->episodes() };
 
 =cut
+
 sub episodes {
 	my CLASS_NAME $self = shift;
 
@@ -612,6 +622,7 @@ Retrieve parent tv series list each element of which is hash reference for episo
 	my @tvseries = @{ $film->episodeof() };
 
 =cut
+
 sub episodeof {
    my CLASS_NAME $self = shift;
    my $forced = shift || 0;
@@ -654,6 +665,7 @@ Retrieve url of film cover:
 	my $cover = $film->cover();
 
 =cut
+
 sub cover {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -685,8 +697,9 @@ Retrieve film directors list each element of which is hash reference -
 { id => <ID>, name => <Name> }:
 
 	my @directors = @{ $film->directors() };
-	
+
 =cut
+
 sub directors {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -727,6 +740,7 @@ Retrieve film writers list each element of which is hash reference -
 contain a full list!</I>	
 
 =cut
+
 sub writers {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -763,6 +777,7 @@ Retrieve film genres list:
 	my @genres = @{ $film->genres() };
 
 =cut
+
 sub genres {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -791,10 +806,11 @@ sub genres {
 =item tagline()
 
 Retrieve film tagline:
-	
+
 	my $tagline = $film->tagline();
 
 =cut
+
 sub tagline {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -819,6 +835,7 @@ Retrieve film plot summary:
 	my $plot = $film->plot();
 
 =cut
+
 sub plot {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -843,16 +860,17 @@ sub plot {
 =item rating()
 
 In scalar context returns film user rating, in array context returns 
-film rating and number of votes:
-	
+film rating, number of votes and info about place in TOP 250 or some other TOP:
+
 	my $rating = $film->rating();
 
 	or
 
-	my($rating, $vnum) = $film->rating();
+	my($rating, $vnum, $top_info) = $film->rating();
 	print "RATING: $rating ($vnum votes )";
 
 =cut
+
 sub rating {
 	my CLASS_NAME $self = shift;
 	my ($forced) = shift || 0;
@@ -871,8 +889,17 @@ sub rating {
 
 		my($rating, $val) = $text =~ m!(\d+\.?\d*)/10.*?(\d+,?\d*)!;
 		$val =~ s/\,// if $val;
+		my $top_info;
 
-		$self->{_rating} = [$rating, $val];
+		# Try to retrieve TOP info
+		while(my $tag = $parser->get_tag()) {
+
+			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} =~ m#/chart/#;
+
+			last if $tag->[0] eq 'h5' && $parser->get_text =~ /MOVIEmeter/i;
+		}
+		
+		$self->{_rating} = [$rating, $val, $top_info];
 	}
 
 	return wantarray ? @{ $self->{_rating} } : $self->{_rating}[0];
@@ -890,6 +917,7 @@ Note: this method retrieves a cast list first billed only!
 </I>
 
 =cut
+
 sub cast {
 	my CLASS_NAME $self = shift;
 	my ($forced) = shift || 0;
@@ -933,6 +961,7 @@ In array context it retrieves all movie's durations:
 	my @durations = $film->duration();
 
 =cut
+
 sub duration {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -960,6 +989,7 @@ Retrieve film produced countries list:
 	my $countries = $film->country();
 
 =cut
+
 sub country {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -995,6 +1025,7 @@ Retrieve film languages list:
 	my $languages = $film->language();
 
 =cut
+
 sub language {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -1033,6 +1064,7 @@ Retrieve AKA information as array, each element of which is string:
 	print map { "$_\n" } @$aka;
 
 =cut
+
 sub also_known_as {
 	my CLASS_NAME $self= shift;
 	unless($self->{_also_known_as}) {
@@ -1060,6 +1092,7 @@ Retrieve a movie trivia:
 	my $trivia = $film->trivia();
 
 =cut
+
 sub trivia {
 	my CLASS_NAME $self = shift;
 
@@ -1070,10 +1103,11 @@ sub trivia {
 =item goofs()
 
 Retrieve a movie goofs:
-	
+
 	my $goofs = $film->goofs();
 
 =cut
+
 sub goofs {
 	my CLASS_NAME $self = shift;
 
@@ -1088,6 +1122,7 @@ Retrieve a general information about movie awards like 1 win & 1 nomination:
 	my $awards = $film->awards();
 
 =cut	
+
 sub awards {
 	my CLASS_NAME $self = shift;
 
@@ -1103,6 +1138,7 @@ Return a MPAA for the specified move:
 	my mpaa = $film->mpaa_info();
 
 =cut
+
 sub mpaa_info {
 	my CLASS_NAME $self = shift;
 	unless($self->{_mpaa_info}) {
@@ -1129,6 +1165,7 @@ Returns an aspect ratio of specified movie:
 	my $aspect_ratio = $film->aspect_ratio();
 
 =cut
+
 sub aspect_ratio {
 	my CLASS_NAME $self = shift;
 
@@ -1142,8 +1179,9 @@ sub aspect_ratio {
 Retrieve film user summary:
 
 	my $descr = $film->summary();
-	
+
 =cut
+
 sub summary {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -1172,6 +1210,7 @@ Retrieve list of film certifications each element of which is hash reference -
 	my @cert = $film->certifications();
 
 =cut
+
 sub certifications {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
@@ -1253,7 +1292,7 @@ sub full_plot {
 
 Returns a list of official sites of specified movie as array reference which contains hashes
 with site information - URL => Site Title:
-	
+
 	my $sites = $film->official_sites();
 	for(@$sites) {
 		my($url, $title) = each %$_;
@@ -1261,6 +1300,7 @@ with site information - URL => Site Title:
 	}
 
 =cut
+
 sub official_sites {
 	my CLASS_NAME $self = shift;
 
@@ -1300,7 +1340,7 @@ sub official_sites {
 =item release_dates()
 
 Returns a list of release dates of specified movie as array reference:
-	
+
 	my $sites = $film->release_dates();
 	for(@$sites) {
 		my($country, $date, $info) = each %$_;
@@ -1310,6 +1350,7 @@ Returns a list of release dates of specified movie as array reference:
 Option info contains additional information about release - DVD premiere, re-release, restored version etc	
 
 =cut
+
 sub release_dates {
 	my CLASS_NAME $self = shift;
 
