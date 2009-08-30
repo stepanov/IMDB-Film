@@ -1,5 +1,15 @@
 Revision history for Perl module IMDB::Film
 
+0.42 August 20
+	- fixed issue with retrieving of plot contained a link (thanks to Byju for
+	the bug-report).
+
+0.41 July 30
+	- added retrieving of recommendation movies;
+	- fixed issue with using of uninitialized value in pattern match (thanks
+	to Byju);
+	- fixed issue with wrong item in the list of movie directors. 
+
 0.40 July 11
 	- added top info into rating array (requested by Geoffrey Hoffman);
 	- fixed pod errors (thanks to Bas Zoetekouw, ticket #47433).

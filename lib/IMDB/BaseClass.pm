@@ -31,7 +31,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.40';
+	$VERSION = '0.42';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',

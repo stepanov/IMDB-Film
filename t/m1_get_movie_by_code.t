@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 21;
+use Test::More tests => 22;
 
 use IMDB::Film;
 
@@ -74,3 +74,7 @@ is($certs->{USA}, 'R', 'Movie Certifications');
 
 is_deeply($obj->directors, $films{directors}, 'Movie Directors');
 is_deeply($obj->writers, $films{writers}, 'Movie Writers');
+
+my $rec_movies = $obj->recommendation_movies();
+my($code, $title) = each %$rec_movies;
+like($code, qr/\d+/, 'Recommedation movies');

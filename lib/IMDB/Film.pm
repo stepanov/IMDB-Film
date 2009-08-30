@@ -83,6 +83,7 @@ use fields qw(	_title
 				_company
 				_connections
 				_full_companies
+				_recommendation_movies
 				full_plot_url
 		);
 	
@@ -96,7 +97,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.40';
+		$VERSION = '0.42';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -671,8 +672,8 @@ sub cover {
 	my $forced = shift || 0;
 
 	if($forced) {
-		my ($parser) = $self->_parser(FORCED);
-		my ($cover);
+		my $parser = $self->_parser(FORCED);
+		my $cover;
 
 		my $title = quotemeta($self->title);
 		while(my $img_tag = $parser->get_tag('img')) {
@@ -690,6 +691,54 @@ sub cover {
 
 	return $self->{_cover};
 }	
+
+=item recommendation_movies()
+
+Return a list of recommended movies for specified one as a hash where each key is a movie ID in IMDB and
+value - movie's title:
+
+	$recommendation_movies = $film->recommendation_movies();
+
+For example, the list of recommended movies for Troy will be similar to that:
+
+	__DATA__
+	$VAR1 = {                                                                                                                                 
+          '0416449' => '300',                                                                                                             
+          '0167260' => 'The Lord of the Rings: The Return of the King',                                                                   
+          '0442933' => 'Beowulf',                                                                                                         
+          '0320661' => 'Kingdom of Heaven',                                                                                               
+          '0172495' => 'Gladiator'                                                                                                        
+        };   
+
+=cut
+
+sub recommendation_movies {
+	my CLASS_NAME $self = shift;
+	my $forced = shift || 0;
+
+	if($forced) {
+		my $parser = $self->_parser(FORCED);
+
+		while(my $tag = $parser->get_tag('h3')) {
+			my $text = $parser->get_text();
+			last if $text =~ /recommendations/i;
+		}
+		
+		my %result = ();
+		while(my $tag = $parser->get_tag()) {
+			last if $tag->[0] eq '/table';
+			
+			my $text = $parser->get_text();
+			if($tag->[0] eq 'a' && $text && $tag->[1]{href} =~ /tt(\d+)/) {
+				$result{$1} = $text;
+			}
+		}
+		
+		$self->{_recommendation_movies} = \%result;
+	}
+
+	return $self->{_recommendation_movies};
+}
 
 =item directors()
 
@@ -717,7 +766,7 @@ sub directors {
 			
 			last if $text =~ /^writ(?:ing|ers)/i or $tag->[0] eq '/div';
 			
-			if($tag->[0] eq 'a' && $tag->[1]{href} && $text !~ /img/i) {
+			if($tag->[0] eq 'a' && $tag->[1]{href} && $text !~ /(img|more)/i) {
 				my($id) = $tag->[1]{href} =~ /(\d+)/;	
 				push @directors, {id => $id, name => $text};
 			}			
@@ -848,10 +897,12 @@ sub plot {
 		while(my $tag = $parser->get_tag(MAIN_TAG)) {
 			last if $parser->get_text =~ /^plot/i;
 		}
+ 		
+		my $plot = $parser->get_trimmed_text(MAIN_TAG, '/div');
+		$plot =~ s/\s+full summary \| full synopsis//;
+		$self->{_plot} = $plot;
 
-		$self->{_plot} = $parser->get_trimmed_text(MAIN_TAG, 'a');
-
-		my $tag = $parser->get_tag('a');
+		$parser->get_tag('a');
 	}	
 
 	return $self->{_plot};
@@ -894,7 +945,7 @@ sub rating {
 		# Try to retrieve TOP info
 		while(my $tag = $parser->get_tag()) {
 
-			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} =~ m#/chart/#;
+			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/#;
 
 			last if $tag->[0] eq 'h5' && $parser->get_text =~ /MOVIEmeter/i;
 		}
