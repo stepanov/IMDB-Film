@@ -21,6 +21,8 @@ use warnings;
 use HTML::TokeParser;
 use LWP::Simple qw($ua get);
 use Cache::FileCache;
+use Text::Unidecode qw(unidecode);
+use HTML::Entities;
 use Carp;
 
 use Data::Dumper;
@@ -66,7 +68,8 @@ use fields qw(	content
 				file
 				timeout
 				user_agent
-				_code				
+				decode_html
+				_code
 	);
 
 =head2 Constructor and initialization
@@ -208,6 +211,12 @@ sub _proxy {
 	if(@_) { $self->{proxy} = shift }
 	return $self->{proxy};
 }
+
+sub _decode_html {
+	my CLASS_NAME $self = shift;
+	if(@_) { $self->{decode_html} = shift }
+	return $self->{decode_html};
+}	
 
 =item _cache()
 
@@ -476,6 +485,8 @@ sub _get_simple_prop {
 
 	$self->_show_message("RES: $res", 'DEBUG');
 	
+	$res = $self->_decode_special_symbols($res);
+
 	return $res;
 }
 
@@ -578,6 +589,14 @@ sub error {
 	my CLASS_NAME $self = shift;
 	if(@_) { push @{ $self->{error} }, shift() }
 	return join("\n", @{ $self->{error} }) if $self->{error};
+}
+
+sub _decode_special_symbols {
+	my($self, $text) = @_;
+	if($self->_decode_html) {
+		$text = unidecode(decode_entities($text));
+	}	
+	return $text;
 }
 
 sub AUTOLOAD {

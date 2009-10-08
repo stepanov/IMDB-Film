@@ -27,6 +27,8 @@ WriteMakefile(
 							'Error'				=> 0,
 							'Digest::SHA1'		=> 0,
 							'Pod::Checker'		=> 0,
+							'HTML::Entities'	=> 0,
+							'Text::Unidecode'	=> 0,
 					}, 
 					
     test           => {TESTS => $tests},
