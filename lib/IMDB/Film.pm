@@ -98,7 +98,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.42';
+		$VERSION = '0.43';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -189,7 +189,7 @@ sub _init {
 		return;
 	} 
 
-	for my $prop (grep { /^_/ && !/^(_title|_code|_full_plot|_official_sites|_release_dates)$/ } sort keys %FIELDS) {
+	for my $prop (grep { /^_/ && !/^(_title|_code|_full_plot|_official_sites|_release_dates|_connections|_full_companies|_plot_keywords)$/ } sort keys %FIELDS) {
 		($prop) = $prop =~ /^_(.*)/;
 		$self->$prop(FORCED);
 	}
@@ -359,11 +359,12 @@ sub title {
 		} 
 		
 		if($title) {
-			$self->retrieve_code($parser, '/pro.imdb.com/title/tt(\d+)') 
-														unless $self->code;
+			$self->retrieve_code($parser, 'http://www.imdb.com/title/tt(\d+)') unless $self->code;
 			$title =~ s/\*/\\*/g;
 			$title = $self->_decode_special_symbols($title);
-		
+			
+			$self->_show_message("title: $title", 'DEBUG');
+
 			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\(([\d\?]{4}).*?\)(?:\s+\((.*?)\))?!;
 			$self->{_kind} = '' unless $self->{_kind};
 			
@@ -892,13 +893,11 @@ sub plot {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
 
-	my ($text);
-
 	if($forced) {
 		my $parser = $self->_parser(FORCED);
 
 		while(my $tag = $parser->get_tag(MAIN_TAG)) {
-			last if $parser->get_text =~ /^plot/i;
+			last if $parser->get_text =~ /^plot\:/i;
 		}
  		
 		my $plot = $parser->get_trimmed_text(MAIN_TAG, '/div');
@@ -948,7 +947,7 @@ sub rating {
 		# Try to retrieve TOP info
 		while(my $tag = $parser->get_tag()) {
 
-			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/#;
+			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/top\?#;
 
 			last if $tag->[0] eq 'h5' && $parser->get_text =~ /MOVIEmeter/i;
 		}
@@ -1126,10 +1125,13 @@ sub also_known_as {
 
         while(my $tag = $parser->get_tag(MAIN_TAG)) {
         	my $text = $parser->get_text();
+			$self->_show_message("AKA: $text", 'DEBUG');
             last if $text =~ /^(aka|also known as)/i;
         }
 
-		my $aka = $parser->get_trimmed_text(MAIN_TAG, 'div');
+		my $aka = $parser->get_trimmed_text(MAIN_TAG, '/div');
+		
+		$self->_show_message("AKA: $aka", 'DEBUG');
 
 		my @aka = $aka =~ /(.+?\)(?:\s\(.+?\))?)\s?/g;
 

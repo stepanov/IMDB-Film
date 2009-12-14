@@ -1,5 +1,13 @@
 Revision history for Perl module IMDB::Film
 
+0.43 Nov 12
+	- fixed issue with retrieving plot keywords instead of plot (thanks to Justin 
+	Fletcher for the bugreport and patch, for ticket #51240);
+	- fixe issue with parsing Top 250 or Bottom 100 movie property (thans for
+	Byju for bugreport);
+	- fixed parsing AKA movie info (thanks to Milos Vavrek for bugreport,
+	ticket #52729);
+
 0.42 Oct 8
 	- added keywords for the film;
 	- fixed issue with retrieving of plot contained a link (thanks to Byju for

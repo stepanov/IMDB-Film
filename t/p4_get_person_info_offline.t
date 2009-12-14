@@ -20,4 +20,4 @@ is($p->name, $person_info{name}, 'name');
 is($p->date_of_birth, $person_info{date_of_birth}, 'date_of_birth');
 is($p->place_of_birth, $person_info{place_of_birth}, 'place_of_birth');
 is($p->mini_bio, $person_info{mini_bio}, 'mini_bio');
-like($p->photo, qr/$person_info{photo}/, 'photo');
+like($p->photo, qr#\.jpg#i, 'photo');

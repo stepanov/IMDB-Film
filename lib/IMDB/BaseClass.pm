@@ -33,7 +33,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.42';
+	$VERSION = '0.43';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -569,7 +569,7 @@ sub retrieve_code {
 	my $pattern = shift;
 	my($id, $tag);			
 	
-	while($tag = $parser->get_tag('a')) {
+	while($tag = $parser->get_tag('link')) {
 		if($tag->[1]{href} && $tag->[1]{href} =~ m!$pattern!) {
 			$self->code($1);
 			last;

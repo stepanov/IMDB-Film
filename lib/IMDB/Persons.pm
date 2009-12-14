@@ -169,7 +169,7 @@ sub name {
 
 		if($title) {		
 			$self->status(1);
-			$self->retrieve_code($parser, 'pro.imdb.com/name/nm(\d+)') unless $self->code;
+			$self->retrieve_code($parser, 'http://www.imdb.com/name/nm(\d+)') unless $self->code;
 		} else {
 			$self->status(0);
 			$self->error('Not Found');
