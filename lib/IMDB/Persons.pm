@@ -70,7 +70,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h5';
 
 BEGIN {
-	$VERSION = '0.42';
+	$VERSION = '0.45';
 }
 
 {
@@ -227,14 +227,14 @@ sub date_of_birth {
 		my $year = '';
 		my $place = '';
 		while(my $tag = $parser->get_tag('a')) {
-			last if !$tag->[1]->{href} or $tag->[1]->{href} !~ /(OnThisDay|BornInYear|BornWhere)/i;
+			last if !$tag->[1]->{href} or $tag->[1]->{href} !~ /(date|birth_year|birth_place)/i;
 
 			my $text = $parser->get_text();
 			next unless $text;
 			SWITCH: for($tag->[1]->{href}) {
-				/OnThisDay/i && do { $date = $text; last SWITCH; };
-				/BornInYear/i && do { $year = $text; last SWITCH; };
-				/BornWhere/i && do { $place = $text; last SWITCH; };
+				/date/i && do { $date = $text; last SWITCH; };
+				/birth_year/i && do { $year = $text; last SWITCH; };
+				/birth_place/i && do { $place = $text; last SWITCH; };
 			}			
 		}
 

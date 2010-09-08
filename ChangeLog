@@ -1,6 +1,17 @@
 Revision history for Perl module IMDB::Film
 
-0.43 Nov 12
+0.45 Mar 19 2010
+	- fixed parsing of movie top info (thanks to Stefan Göbel for the patch);
+	- added new test for top movie info;
+	- fixed a few tests.
+
+0.44 Mar 17 2010
+	- fixed issue with retrieving movie by its title (thanks to Peter Valdemar
+	Mørch for patch);
+	- fixed issue with parsing person birthday and birthplace;
+	- fixed tests.
+
+0.43 Nov 12 2009
 	- fixed issue with retrieving plot keywords instead of plot (thanks to Justin 
 	Fletcher for the bugreport and patch, for ticket #51240);
 	- fixe issue with parsing Top 250 or Bottom 100 movie property (thans for
@@ -8,24 +19,24 @@ Revision history for Perl module IMDB::Film
 	- fixed parsing AKA movie info (thanks to Milos Vavrek for bugreport,
 	ticket #52729);
 
-0.42 Oct 8
+0.42 Oct 8 2009
 	- added keywords for the film;
 	- fixed issue with retrieving of plot contained a link (thanks to Byju for
 	the bug-report);
 	- fixed issue with displaying special HTML symbols (ticket #49060);
 	- fixed POD documentation.
 
-0.41 Jul 30
+0.41 Jul 30 2009
 	- added retrieving of recommendation movies;
 	- fixed issue with using of uninitialized value in pattern match (thanks
 	to Byju);
 	- fixed issue with wrong item in the list of movie directors. 
 
-0.40 Jul 11
+0.40 Jul 11 2009
 	- added top info into rating array (requested by Geoffrey Hoffman);
 	- fixed pod errors (thanks to Bas Zoetekouw, ticket #47433).
 
-0.39 Jul 03
+0.39 Jul 03 2009
 	- added additional attributes such "re-release", "DVD premiere" etc from
 	the release date page (requested by Vincent Lefevre, ticket #47457);
 	- added support for companies and movie connections (thanks to Justin for

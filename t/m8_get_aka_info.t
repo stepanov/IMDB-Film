@@ -14,4 +14,4 @@ is(scalar(@{$film->also_known_as}), 2, 'Also known as info');
 $film = new IMDB::Film(crit => '0403358');
 
 like($film->title, qr/nochnoy dozor/i, 'Movie title');
-ok(scalar(@{$film->also_known_as}) > 1, 'Also known as info');
+ok(scalar(@{$film->also_known_as}) >= 1, 'Also known as info');

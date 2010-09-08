@@ -98,7 +98,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h5';
 
 BEGIN {
-		$VERSION = '0.43';
+		$VERSION = '0.45';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -304,7 +304,7 @@ sub _search_film {
 	my CLASS_NAME $self = shift;
 	my $args = shift || {};
 
-	return $self->SUPER::_search_results('\/title\/tt(\d+)', '/td', $args->{year});
+	return $self->SUPER::_search_results('^\/title\/tt(\d+)', '/td', $args->{year});
 }
 
 =back
@@ -934,7 +934,14 @@ sub rating {
 		while(my $tag = $parser->get_tag(MAIN_TAG)) {
 			last if $parser->get_text =~ /^User Rating/i;
 		}
-		
+	
+		# Try to retrieve TOP info
+		my $top_info;
+		while(my $tag = $parser->get_tag()) {
+			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/top\?#;
+			last if $tag -> [0] eq 'div' && $tag -> [1] {'id'} && $tag -> [1] {'id'} eq 'general-voting-stars';
+		}
+
 		my $tag = $parser->get_tag('b');	
 		my $text = $parser->get_trimmed_text('b', '/a');
 
@@ -942,15 +949,6 @@ sub rating {
 
 		my($rating, $val) = $text =~ m!(\d+\.?\d*)/10.*?(\d+,?\d*)!;
 		$val =~ s/\,// if $val;
-		my $top_info;
-
-		# Try to retrieve TOP info
-		while(my $tag = $parser->get_tag()) {
-
-			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/top\?#;
-
-			last if $tag->[0] eq 'h5' && $parser->get_text =~ /MOVIEmeter/i;
-		}
 		
 		$self->{_rating} = [$rating, $val, $top_info];
 	}
@@ -985,9 +983,9 @@ sub cast {
 
 		while($tag = $parser->get_tag('a')) {
 
-			last if $tag->[1]{href} =~ /fullcredits/i;
+			last if $tag->[1]{href} && $tag->[1]{href} =~ /fullcredits/i;
 			if($tag->[1]{href} && $tag->[1]{onclick} && $tag->[1]{onclick} =~ /castlist/ 
-													&& $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
+																&& $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
 				$person = $parser->get_text;
 				$id = $1;	
 				my $text = $parser->get_trimmed_text('/tr');

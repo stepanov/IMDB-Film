@@ -33,7 +33,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.43';
+	$VERSION = '0.45';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -481,7 +481,7 @@ sub _get_simple_prop {
 
 	my $res = $parser->get_trimmed_text($end_tag);	
 
-	$res =~ s/\s+more$//;
+	$res =~ s/\s+(see )?more$//i;
 
 	$self->_show_message("RES: $res", 'DEBUG');
 	

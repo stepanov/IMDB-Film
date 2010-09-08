@@ -4,7 +4,7 @@
 
 use strict;
 
-use Test::More tests => 15;
+use Test::More tests => 16;
 use IMDB::Film;
 
 my %default_pars = (debug => 0, cache => 0);
@@ -38,12 +38,13 @@ is($obj->code, '0379836', 'Movie Code');
 is($obj->year, 2003, 'Movie Year');
 
 
-$obj = new IMDB::Film(%default_pars, crit => '0431035');
-my($rate, $num) = $obj->rating;
+$obj = new IMDB::Film(%default_pars, crit => '0068646');
+my($rate, $num, $top_info) = $obj->rating;
 like($rate, qr/\d+/, 'Movie rating');
 like($num, qr/\d+/, 'Rated people');
 ok($rate > 1, 'Rate is greater than 1');
 ok($num >= 8, 'Votes greater than 8');
+like($top_info, qr/Top 250/, 'Top info');
 
 $obj = new IMDB::Film(%default_pars, crit => 300);
 is($obj->code, '0416449', 'Movie ID');
