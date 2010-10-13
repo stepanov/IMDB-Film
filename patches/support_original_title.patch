@@ -1,0 +1,63 @@
+--- Film.pm	2009-12-14 07:55:15.000000000 -0500
++++ Film.pm.new	2010-08-21 16:44:25.000000000 -0400
+@@ -62,6 +62,7 @@
+ 				_cast
+ 				_directors
+ 				_writers
++				_original_title
+ 				_cover
+ 				_language
+ 				_country
+@@ -663,6 +664,33 @@
+    return $self->{_episodeof};
+ }
+ 
++=item original_title()
++
++Retrieve film's original (untranslated) title:
++
++	my $original_title = $film->original_title();
++
++=cut
++
++sub original_title {
++	my CLASS_NAME $self = shift;
++	my $forced = shift || 0;
++
++	if($forced) {
++		my $parser = $self->_parser(FORCED);
++    my $original_title;
++		while(my $tag = $parser->get_tag('span')) {
++			if ($tag->[1]->{class} && $tag->[1]->{class} =~ /title-extra/i)
++      {
++         $original_title = $parser->get_trimmed_text();
++         last;
++      }
++    }
++		$self->{_original_title} = $original_title;
++  }
++  return $self->{_original_title};
++}
++
+ =item cover()
+ 
+ Retrieve url of film cover:
+@@ -680,12 +708,17 @@
+ 		my $cover;
+ 
+ 		my $title = quotemeta($self->title);
++		my $original_title = quotemeta($self->original_title);
+ 		while(my $img_tag = $parser->get_tag('img')) {
+ 			$img_tag->[1]{alt} ||= '';	
+ 		
+ 			last if $img_tag->[1]{alt} =~ /^poster not submitted/i;			
+ 
+-			if($img_tag->[1]{alt} =~ /^$title$/i) {
++			if (
++           $img_tag->[1]{alt} =~ /^$title$/i ||
++           ( defined $original_title && $original_title ne '' && ($img_tag->[1]{alt} =~ /^$original_title$/i) ) 
++         )
++      {
+ 				$cover = $img_tag->[1]{src};
+ 				last;
+ 			}

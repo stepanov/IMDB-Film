@@ -65,6 +65,7 @@ use fields qw(	_title
 				_cover
 				_language
 				_country
+				_top_info
 				_rating
 				_genres
 				_tagline
@@ -85,6 +86,8 @@ use fields qw(	_title
 				_full_companies
 				_recommendation_movies
 				_plot_keywords
+				_big_cover_url
+				_big_cover_page
 				full_plot_url
 		);
 	
@@ -95,10 +98,10 @@ use constant FORCED			=> 1;
 use constant USE_CACHE		=> 1;
 use constant DEBUG_MOD		=> 1;
 use constant EMPTY_OBJECT	=> 0;
-use constant MAIN_TAG		=> 'h5';
+use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.45';
+		$VERSION = '0.47';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -139,6 +142,8 @@ BEGIN {
 		_official_sites	=> [],
 		_release_dates	=> [],
 		_duration		=> [],
+		_top_info		=> [],
+		_cast			=> [],
 	);	
 	
 	sub _get_default_attrs { keys %_defaults }		
@@ -189,7 +194,8 @@ sub _init {
 		return;
 	} 
 
-	for my $prop (grep { /^_/ && !/^(_title|_code|_full_plot|_official_sites|_release_dates|_connections|_full_companies|_plot_keywords)$/ } sort keys %FIELDS) {
+	for my $prop (grep { /^_/ &&
+	!/^(_title|_code|_full_plot|_official_sites|_release_dates|_connections|_full_companies|_plot_keywords|_big_cover_url|_big_cover_page)$/ } sort keys %FIELDS) {
 		($prop) = $prop =~ /^_(.*)/;
 		$self->$prop(FORCED);
 	}
@@ -365,7 +371,11 @@ sub title {
 			
 			$self->_show_message("title: $title", 'DEBUG');
 
-			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\(([\d\?]{4}).*?\)(?:\s+\((.*?)\))?!;
+			# TODO: implement parsing of TV series like ALF (TV Series 1986–1990)
+			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\((\d{4})\)(?:\s\((\w*)\))?!;
+			unless($self->{_title}) {
+				($self->{_title}, $self->{_kind}, $self->{_year}) = $title =~ m!(.*?)\s+\((.*?)?\s?([0-9\-]*)\)!;
+			}
 			$self->{_kind} = '' unless $self->{_kind};
 			
        		# "The Series" An Episode (2005)
@@ -456,7 +466,7 @@ sub connections {
         		my $name = $parser->get_trimmed_text;
 
         		# Handle series episodes (usually in 'referenced' sections)
-        		my($series,$t,$s,$e) = ($name =~ /^"(.*?): *(.*?) *\(#(\d+)\.(\d+)\)"$/);
+        		my($series,$t,$s,$e) = ($name =~ /^"(.*?): *(.*?) *\(?#(\d+)\.(\d+)\)?"$/);
           		$name = $series if defined $series;
         	
 				$tag = $parser->get_tag('/a');
@@ -552,18 +562,25 @@ sub full_companies {
 
 =item company()
 
-Returns an company given for a specified movie:
+Returns a list of companies given for a specified movie:
 
   my $company = $film->company();
+
+or  
+
+ my @companies = $film->company();
 
 =cut
 
 sub company {
   	my CLASS_NAME $self = shift;
-
-  	$self->{_company} = $self->_get_simple_prop('company') unless $self->{_company};
+	
+	unless($self->{_company}) {
+  		my @companies = split /\s?\,\s?/, $self->_get_simple_prop('Production Co');
+		$self->{_company} = \@companies;
+	}	
   	
-	return $self->{_company};
+	return wantarray ? $self->{_company} : $self->{_company}[0];
 }
 
 =item episodes()
@@ -578,7 +595,7 @@ Retrieve episodes info list each element of which is hash reference for tv serie
 sub episodes {
 	my CLASS_NAME $self = shift;
 
-	return if $self->kind ne "tv series";
+	return if !$self->kind or $self->kind ne "tv series";
 
 	unless($self->{_episodes}) {
 		my $page;
@@ -632,7 +649,7 @@ sub episodeof {
    my CLASS_NAME $self = shift;
    my $forced = shift || 0;
 
-   return if $self->kind ne "episode";
+   return if !$self->kind or $self->kind ne "episode";
 
    if($forced) {
 	   my($episodeof, $title, $year, $episode, $season, $id);
@@ -685,7 +702,7 @@ sub cover {
 		
 			last if $img_tag->[1]{alt} =~ /^poster not submitted/i;			
 
-			if($img_tag->[1]{alt} =~ /^$title$/i) {
+			if($img_tag->[1]{alt} =~ /^$title Poster$/i) {
 				$cover = $img_tag->[1]{src};
 				last;
 			}
@@ -695,6 +712,21 @@ sub cover {
 
 	return $self->{_cover};
 }	
+
+sub top_info {
+	my CLASS_NAME $self = shift;
+	my $forced = shift || 0;
+	if($forced or !$self->{'_top_info'}) {
+		my $parser = $self->_parser(FORCED);
+		while(my $tag = $parser->get_tag('div')) {
+			last if $tag->[1]->{class} && $tag->[1]->{class} eq 'article highlighted';
+		}
+		my $text = $parser->get_trimmed_text('span');
+		my @top_items = split /\s?\|\s?/, $text;
+		$self->{_top_info} = \@top_items;
+	}
+	return $self->{_top_info};
+}
 
 =item recommendation_movies()
 
@@ -723,7 +755,7 @@ sub recommendation_movies {
 	if($forced) {
 		my $parser = $self->_parser(FORCED);
 
-		while(my $tag = $parser->get_tag('h3')) {
+		while(my $tag = $parser->get_tag('h2')) {
 			my $text = $parser->get_text();
 			last if $text =~ /recommendations/i;
 		}
@@ -762,9 +794,10 @@ sub directors {
 		my (@directors, $tag);
 	
 		while($tag = $parser->get_tag(MAIN_TAG)) {
-			last if $parser->get_text =~ /^direct(?:ed|or)/i;
+			my $text = $parser->get_text;
+			last if $text =~ /direct(?:ed|or)/i;
 		}
-
+		
 		while ($tag = $parser->get_tag() ) {
 			my $text = $parser->get_text();
 			
@@ -845,7 +878,7 @@ sub genres {
 
 		while(my $tag = $parser->get_tag('a')) {
 			my $genre = $parser->get_text;	
-			last unless $tag->[1]{href} =~ /genres/i;
+			last unless $tag->[1]{href} =~ m!/genre/!i;
 			last if $genre =~ /more/i;
 			push @genres, $genre;
 		}	
@@ -896,12 +929,11 @@ sub plot {
 	if($forced) {
 		my $parser = $self->_parser(FORCED);
 
-		while(my $tag = $parser->get_tag(MAIN_TAG)) {
-			last if $parser->get_text =~ /^plot\:/i;
+		while(my $tag = $parser->get_tag('h2')) {
+			last if $parser->get_text =~ /^storyline$/i;
 		}
  		
-		my $plot = $parser->get_trimmed_text(MAIN_TAG, '/div');
-		$plot =~ s/\s+full summary \| full synopsis//;
+		my $plot = $parser->get_trimmed_text(MAIN_TAG, 'em');
 		$self->{_plot} = $self->_decode_special_symbols($plot);
 
 		$parser->get_tag('a');
@@ -920,7 +952,7 @@ film rating, number of votes and info about place in TOP 250 or some other TOP:
 	or
 
 	my($rating, $vnum, $top_info) = $film->rating();
-	print "RATING: $rating ($vnum votes )";
+	print "RATING: $rating ($vnum votes)";
 
 =cut
 
@@ -931,26 +963,16 @@ sub rating {
 	if($forced) {
 		my $parser = $self->_parser(FORCED);
 	
-		while(my $tag = $parser->get_tag(MAIN_TAG)) {
-			last if $parser->get_text =~ /^User Rating/i;
+		while(my $tag = $parser->get_tag('span')) {
+			last if $tag->[1]{id} && $tag->[1]{id} eq 'star-bar-user-rate';
 		}
-	
-		# Try to retrieve TOP info
-		my $top_info;
-		while(my $tag = $parser->get_tag()) {
-			$top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/top\?#;
-			last if $tag -> [0] eq 'div' && $tag -> [1] {'id'} && $tag -> [1] {'id'} eq 'general-voting-stars';
-		}
-
-		my $tag = $parser->get_tag('b');	
-		my $text = $parser->get_trimmed_text('b', '/a');
-
-		$self->_show_message("Rating text is [$text]; tag: " . Dumper($tag), 'DEBUG');
-
+		
+		my $text = $parser->get_trimmed_text('/a');
+		
 		my($rating, $val) = $text =~ m!(\d+\.?\d*)/10.*?(\d+,?\d*)!;
 		$val =~ s/\,// if $val;
 		
-		$self->{_rating} = [$rating, $val, $top_info];
+		$self->{_rating} = [$rating, $val, $self->top_info];
 	}
 
 	return wantarray ? @{ $self->{_rating} } : $self->{_rating}[0];
@@ -978,26 +1000,25 @@ sub cast {
 		my $parser = $self->_parser(FORCED);
 	
 		while($tag = $parser->get_tag('table')) {
-			last if $tag->[1]->{class} && $tag->[1]->{class} =~ /cast/i;
+			last if $tag->[1]->{class} && $tag->[1]->{class} =~ /^cast_list$/i;
 		}
-
-		while($tag = $parser->get_tag('a')) {
-
-			last if $tag->[1]{href} && $tag->[1]{href} =~ /fullcredits/i;
-			if($tag->[1]{href} && $tag->[1]{onclick} && $tag->[1]{onclick} =~ /castlist/ 
-																&& $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
-				$person = $parser->get_text;
-				$id = $1;	
-				my $text = $parser->get_trimmed_text('/tr');
-				
-				($role) = $text =~ /.*?\s+(.*)$/;			
-				push @cast, {id => $id, name => $person, role => $role};
-			}	
+		while($tag = $parser->get_tag()) {
+			last if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ /fullcredits/i;
+			if($tag->[0] eq 'td' && $tag->[1]{class} && $tag->[1]{class} eq 'name') {
+				$tag = $parser->get_tag('a');
+				if($tag->[1]{href} && $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
+					$person = $parser->get_text;
+					$id = $1;	
+					my $text = $parser->get_trimmed_text('/tr');
+					($role) = $text =~ /.*?\s+(.*)$/;
+					push @cast, {id => $id, name => $person, role => $role};
+				}
+			}
 		}	
 		
 		$self->{_cast} = \@cast;
 	}
-	
+
 	return $self->{_cast};
 }
 
@@ -1024,8 +1045,8 @@ sub duration {
 			my $text = $parser->get_text();
 			last if $text =~ /runtime:/i;
 		}	
-		
-		my @runtime = split /\s+(\/|\|)\s+/, $parser->get_trimmed_text(MAIN_TAG, 'br');
+		my $duration_str = $self->_decode_special_symbols($parser->get_trimmed_text(MAIN_TAG, '/div'));
+		my @runtime = split /\s+(\/|\|)\s+/, $duration_str;
 		
 		$self->{_duration} = \@runtime;		
 	}
@@ -1054,7 +1075,7 @@ sub country {
 		my (@countries);
 		while(my $tag = $parser->get_tag()) {
 
-			if( $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ /countries/i ) {
+			if( $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m!/country/[a-z]{2}!i ) {
 				my $text = $parser->get_text();
 				$text =~ s/\n//g;
 				push @countries, $text;
@@ -1087,16 +1108,15 @@ sub language {
 		while ($tag = $parser->get_tag(MAIN_TAG)) {
 			last if $parser->get_text =~ /language/i;
 		}	
-
+		
 		while($tag = $parser->get_tag()) {
-			
-			if( $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ /languages/i ) {
+			if( $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m!/language/[a-z]{2}!i ) {
 				my $text = $parser->get_text();
 				$text =~ s/\n//g;
 				push @languages, $text;
 			} 
 			
-			last if $tag->[0] eq 'br';
+			last if $tag->[0] eq '/div';
 		}
 
 		$self->{_language} = \@languages; 
@@ -1127,12 +1147,10 @@ sub also_known_as {
             last if $text =~ /^(aka|also known as)/i;
         }
 
-		my $aka = $parser->get_trimmed_text(MAIN_TAG, '/div');
+		my $aka = $parser->get_trimmed_text('span');
 		
 		$self->_show_message("AKA: $aka", 'DEBUG');
-
-		my @aka = $aka =~ /(.+?\)(?:\s\(.+?\))?)\s?/g;
-
+		my @aka = ($aka);
 		$self->{_also_known_as} = \@aka;
 	}	
 	
@@ -1180,9 +1198,7 @@ Retrieve a general information about movie awards like 1 win & 1 nomination:
 sub awards {
 	my CLASS_NAME $self = shift;
 
-	$self->{_awards} = $self->_get_simple_prop('awards') unless $self->{_awards};
-
-	return $self->{_awards};
+	return $self->{_top_info};
 }
 
 =item mpaa_info()
@@ -1201,11 +1217,11 @@ sub mpaa_info {
 
         while(my $tag = $parser->get_tag(MAIN_TAG)) {
         	my $text = $parser->get_trimmed_text(MAIN_TAG, '/a');
-            last if $text =~ /^mpaa/i;
+            last if $text =~ /^Motion Picture Rating/i;
         }
 
-		my $mpaa = $parser->get_trimmed_text('/div');
-		$mpaa =~ s/^:\s//;
+		my $mpaa = $parser->get_trimmed_text('span');
+		$mpaa =~ s/^\)\s//;
 		$self->{_mpaa_info} = $mpaa;
 	}
 
@@ -1340,6 +1356,38 @@ sub full_plot {
 	}
 
 	return $self->{_full_plot};
+}
+
+sub big_cover {
+	my CLASS_NAME $self = shift;
+
+	unless($self->{'_big_cover_url'}) {
+		unless($self->{'_big_cover_page'}) {
+			my $parser = $self->_parser(FORCED);
+			my $regexp = '^/media/.+/tt' . $self->code . '$';
+			while(my $tag = $parser->get_tag('a')) {
+				$self->_show_message("$regexp --> " . $tag->[1]->{href}, 'DEBUG');
+				if($tag->[1]->{'href'} =~ m!$regexp!) {	
+					$self->{'_big_cover_page'} = $tag->[1]->{'href'};
+					last;
+				}
+			}
+		}
+		if($self->{'_big_cover_page'}) {
+			my $page = $self->_get_page_from_internet('http://' . $self->{'host'} . $self->{'_big_cover_page'});
+			return unless $page;
+
+			my $parser = $self->_parser(FORCED, \$page);
+			while(my $tag = $parser->get_tag('img')) {
+				if($tag->[1]->{'id'} && $tag->[1]->{'id'} eq 'primary-img') {
+					$self->{'_big_cover_url'} = $tag->[1]->{'src'};
+					last;
+				}
+			}
+		}
+	}
+
+	return $self->{_big_cover_url};
 }
 
 =item official_sites()

@@ -1,0 +1,16 @@
+diff -ruN IMDB-Film-0.46.old/lib/IMDB/Film.pm IMDB-Film-0.46/lib/IMDB/Film.pm
+--- IMDB-Film-0.46.old/lib/IMDB/Film.pm	2010-09-08 08:34:15.000000000 -0600
++++ IMDB-Film-0.46/lib/IMDB/Film.pm	2010-10-12 12:24:36.000000000 -0600
+@@ -369,6 +369,12 @@
+ 			$self->_show_message("title: $title", 'DEBUG');
+ 
+ 			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\(([\d\?]{4}).*?\)(?:\s+\((.*?)\))?!;
++			unless ($self->{_title}) {
++			    ($self->{_title}, $self->{_kind}, $self->{_year}) = $title =~ m!(.*?)\s+\((.*?)\s+([\d\?]{4}).*?\)?!;
++			    while ( my ($k, $v) = each %FILM_KIND ) {
++				$self->{_kind} = $k if $self->{_kind} =~ m{$v}i;
++			    }
++			}
+ 			$self->{_kind} = '' unless $self->{_kind};
+ 			
+        		# "The Series" An Episode (2005)

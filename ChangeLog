@@ -1,5 +1,14 @@
 Revision history for Perl module IMDB::Film
 
+0.47 Oct 12 2010
+	- fixed module functionality according to new IMDB design.
+
+0.46 Sep 10 2010
+	- added possibility to get big size covers;
+	- fixed retrieving of cover for non-English movies;
+	- fixed bug with parsing of the movie title on the search page, ticket #55739;
+	- fixed plot parsing.
+
 0.45 Mar 19 2010
 	- fixed parsing of movie top info (thanks to Stefan Göbel for the patch);
 	- added new test for top movie info;

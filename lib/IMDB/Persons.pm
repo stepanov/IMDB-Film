@@ -67,10 +67,10 @@ use vars qw($VERSION %FIELDS);
 
 use constant FORCED 	=> 1;
 use constant CLASS_NAME => 'IMDB::Persons';
-use constant MAIN_TAG	=> 'h5';
+use constant MAIN_TAG	=> 'h4';
 
 BEGIN {
-	$VERSION = '0.45';
+	$VERSION = '0.47';
 }
 
 {
@@ -159,14 +159,25 @@ sub name {
 
 		$parser->get_tag('title');
 		my $title = $parser->get_text();
+		$title =~ s#\s*\-\s*IMDB##i;
 
 		$self->_show_message("Title=$title", 'DEBUG');
 		
-		if($title =~ /imdb\s+name\s+search/i) {
-			$self->_show_message("Go to search page ...", 'DEBUG');
-			$title = $self->_search_person();				
-		} 
+		# Check if we have some search results
+		my $no_matches = 1;
+		while(my $tag = $parser->get_tag('td')) {
+			if($tag->[1]->{class} && $tag->[1]->{class} eq 'media_strip_header') {
+				$no_matches = 0;
+				last;
+			}
+		}
 
+		if($title =~ /imdb\s+name\s+search/i && !$no_matches) {
+			$self->_show_message("Go to search page ...", 'DEBUG');
+			$title = $self->_search_person();
+		}
+		
+		$title = '' if $title =~ /IMDb Name Search/i;
 		if($title) {		
 			$self->status(1);
 			$self->retrieve_code($parser, 'http://www.imdb.com/name/nm(\d+)') unless $self->code;
@@ -193,14 +204,11 @@ sub mini_bio {
 	my CLASS_NAME $self = shift;
 	if(!defined $self->{_mini_bio}) {
 		my $parser = $self->_parser(FORCED);
-		my $tag;
-		while( $tag = $parser->get_tag(MAIN_TAG) ) {
-			last if $parser->get_text() =~ /Mini biography/i;
+		while(my $tag = $parser->get_tag('td') ) {
+			last if $tag->[1]->{id} && $tag->[1]->{id} eq 'overview-top';
 		}
 		
-		#$tag = $parser->get_tag('dd');
-		
-		$self->{'_mini_bio'} = $parser->get_trimmed_text(MAIN_TAG, 'a');
+		$self->{'_mini_bio'} = $parser->get_trimmed_text('span');
 	}
 	return $self->{'_mini_bio'};
 }
@@ -220,22 +228,25 @@ sub date_of_birth {
 		my $parser = $self->_parser(FORCED);
 		while(my $tag = $parser->get_tag(MAIN_TAG)) {
 			my $text = $parser->get_text;
-			last if $text =~ /Date of birth/i;
+			last if $text =~ /^Born/i;
 		}
 
 		my $date = '';
 		my $year = '';
 		my $place = '';
-		while(my $tag = $parser->get_tag('a')) {
-			last if !$tag->[1]->{href} or $tag->[1]->{href} !~ /(date|birth_year|birth_place)/i;
+		while(my $tag = $parser->get_tag()) {
+			last if $tag->[0] eq '/td';
+			
+			if($tag->[0] eq 'a') {
+				my $text = $parser->get_text();
+				next unless $text;
 
-			my $text = $parser->get_text();
-			next unless $text;
-			SWITCH: for($tag->[1]->{href}) {
-				/date/i && do { $date = $text; last SWITCH; };
-				/birth_year/i && do { $year = $text; last SWITCH; };
-				/birth_place/i && do { $place = $text; last SWITCH; };
-			}			
+				SWITCH: for($tag->[1]->{href}) {
+					/date/i && do { $date = $text; $date =~ s#(\w+)\s(\d+)#$2 $1#; last SWITCH; };
+					/birth_year/i && do { $year = $text; last SWITCH; };
+					/birth_place/i && do { $place = $text; last SWITCH; };
+				}
+			}
 		}
 
 		$self->{'_date_of_birth'} = {date => "$date $year", place => $place};
@@ -270,12 +281,14 @@ sub photo {
 	if(!defined $self->{'_photo'}) {
 		my $tag;
 		my $parser = $self->_parser(FORCED);
-		while($tag = $parser->get_tag('a')) {
-			last if defined $tag->[1]{name} && $tag->[1]{name} eq 'headshot';
+		while($tag = $parser->get_tag('img')) {
+			if($tag->[1]->{alt} && $tag->[1]->{alt} eq $self->name . ' Picture') {
+				$self->{'_photo'} = $tag->[1]{src};
+				last;
+			}	
 		}
 
-		$tag = $parser->get_tag('img');
-		$self->{'_photo'} = $tag->[1]{src};
+		$self->{'_photo'} = 'No Photo' unless $self->{'_photo'};
 	}
 
 	return $self->{'_photo'};
@@ -308,7 +321,7 @@ sub filmography {
 	my $films;
 	if(!$self->{'_filmography'}) {
 		my $parser = $self->_parser(FORCED);
-		while(my $tag = $parser->get_tag('h3')) {
+		while(my $tag = $parser->get_tag('h2')) {
 
 			my $text = $parser->get_text;
 			last if $text && $text =~ /filmography/i;
@@ -426,9 +439,7 @@ __END__
 
 =head1 EXPORTS
 
-Nothing
-
-=head1 BUGS
+No Matches.=head1 BUGS
 
 Please, send me any found bugs by email: stepanov.michael@gmail.com. 
 

@@ -1,0 +1,24 @@
+--- libimdb-film-perl-0.35.orig/lib/IMDB/Film.pm
++++ libimdb-film-perl-0.35/lib/IMDB/Film.pm
+@@ -421,16 +421,15 @@
+               }
+
+               my $parser = $self->_parser(FORCED, \$page);
+-               while(my $tag = $parser->get_tag('a')) {
++               while(my $tag = $parser->get_tag('h3')) {
+                       my $id;
+-                       next unless $tag->[1]->{name} and $tag->[1]->{name} =~ /year/;
+-                       $parser->get_tag('h4');
+-                       my($season, $episode) = $parser->get_text =~ /Season\s+(.*?),\s+Episode\s+([^:]+)/;
++                       my($season, $episode);
++                       next unless(($season, $episode) = $parser->get_text =~ /Season\s+(.*?),\s+Episode\s+([^:]+)/);
+                       my $imdb_tag = $parser->get_tag('a');
+                       ($id) = $imdb_tag->[1]->{href} =~ /(\d+)/ if $imdb_tag->[1]->{href};
+                       my $title = $parser->get_trimmed_text;
+-                       $parser->get_tag('b');
+-                       my($date) = $parser->get_trimmed_text =~ /Original Air Date:\s+(.*)/;
++                       $parser->get_tag('strong');
++                       my($date) = $parser->get_trimmed_text;
+                       $parser->get_tag('br');
+                       my $plot = $parser->get_trimmed_text;
+

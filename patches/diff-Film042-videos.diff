@@ -1,0 +1,174 @@
+*** v042/Film.pm	2009-11-08 19:43:13.000000000 +0000
+--- Film.pm	2009-11-08 19:51:47.000000000 +0000
+***************
+*** 85,90 ****
+--- 85,91 ----
+  				_full_companies
+  				_recommendation_movies
+  				_plot_keywords
++                 _videos
+  				full_plot_url
+  		);
+  	
+***************
+*** 549,554 ****
+--- 550,708 ----
+      return $self->{_full_companies};
+  }
+  
++ 
++ =item videos()
++ 
++ Retrieve references to the videos related to this movie. News items are implicitly filtered. Returns an array reference where each item has following stucture:
++ 
++     { 
++         type            => 'trailer' | 'featurette' | ...,
++         video_id        => <unique imdb identifier for the video, for passing to video_url>,
++         title           => <short title>,
++         description     => <description of the item>,
++         previewimg_url  => <url of a preview image>,
++         date            => 'YYYY-MM-DD',
++         time            => 'hh:mm' | undef
++     }
++ 
++   my @videos = @{ $film->videos() };
++ 
++ =cut
++ 
++ sub videos {
++     my CLASS_NAME $self = shift;
++ 
++     unless($self->{_videos}) {
++         my @result;
++         my $page;
++         my $pagenum = 1;
++         while (1)
++         {
++             $page = $self->_cacheObj->get($self->code . '_videos' . $pagenum) if $self->_cache;
++ 
++             unless($page) {
++                 my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/videogallery?page=$pagenum";
++                 $self->_show_message("URL for video gallery for page $pagenum is $url ...", 'DEBUG');
++ 
++                 $page = $self->_get_page_from_internet($url);
++                 $self->_cacheObj->set($self->code.'_videos', $page, $self->_cache_exp) if $self->_cache;
++             }
++ 
++             my $parser = $self->_parser(FORCED, \$page);
++             my $tag;
++ 
++             if ($parser->get_tag('h1'))
++             {
++                 while (my $tag = $parser->get_tag('img')) {
++                     my $attribs = $tag->[1];
++                     if (defined $attribs->{class} &&
++                         $attribs->{class} eq 'video' &&
++                         defined $attribs->{viconst})
++                     {
++                         my %video = ( 'video_id'       => $attribs->{viconst},
++                                       'description'    => $attribs->{title},
++                                       'previewimg_url' => $attribs->{src},
++                                     );
++                         # The type of clip is only shown in the text in the preview image.
++                         # Fortunately IMDB construct this image on the fly from the URL
++                         # parameters, so we can just extract it from there.
++                         if (defined $attribs->{src} &&
++                             $attribs->{src} =~ /_ZA([^,]+)/)
++                         {
++                             $video{type} = lc($1);
++                         }
++                         else
++                         {
++                             $video{type} = 'unknown';
++                         }
++                         
++                         # I have never seen a 'News' item which was actually relevant.
++                         next if ($video{type} eq 'news');
++                         
++                         if ($parser->get_tag('h2') &&
++                             $parser->get_tag('a'))
++                         {
++                             $video{title} = $parser->get_trimmed_text;
++                         }
++                         if ($parser->get_tag('br'))
++                         {
++                             my $release = $parser->get_trimmed_text;
++                             $video{date} = $1 if ($release =~ /(\d\d\d\d-\d\d-\d\d)/);
++                             $video{time} = $1 if ($release =~ /(\d\d:\d\d)/);
++                         }
++ 
++                         push @result, \%video;
++                     }
++                 }
++             }
++             
++             if ($page =~ /\d+ &ndash; (\d+) of (\d+) Videos/)
++             {
++                 if ($1 == $2)
++                 {
++                     # All pages fetched
++                     $self->_show_message("All video gallery video processed ($2 videos)", 'DEBUG');
++                     last;
++                 }
++                 else
++                 {
++                     $self->_show_message("Processed video gallery page $pagenum, (up to video $1/$2); continuing...", 'DEBUG');
++                 }
++             }
++             else
++             {
++                 $self->_show_message("No other video gallery pages exist", 'DEBUG');
++                 last;
++             }
++             $pagenum++;
++         }
++ 
++         $self->{_videos} = \@result;
++     }
++ 
++     return $self->{_videos};
++ }
++ 
++ 
++ =item video_url($video_id)
++ 
++ Retrieve the URL for a video, given its video_id, or undef it one could not be found
++ 
++ Example to obtain the URL of first trailer of a film:
++ 
++   my @videos = @{ $film->videos() };
++   @videos = grep { $_->{type} eq 'trailer' } @videos;
++   my $url = (@videos > 0) ? $film->video_url($videos[0]->{video_id}) : undef;
++ 
++ =cut
++ 
++ sub video_url {
++     my CLASS_NAME $self = shift;
++     my ($vi) = (@_);
++     
++     return undef if (!defined $vi ||
++                      $vi !~ /^vi\d+$/);
++ 
++     my $page;
++     $page = $self->_cacheObj->get($self->code . '_' . $vi) if $self->_cache;
++ 
++     unless($page) {
++         my $url = "http://". $self->{host} . "/video/imdb/" . $vi . "/player";
++         $self->_show_message("URL for video '$vi' is $url ...", 'DEBUG');
++ 
++         $page = $self->_get_page_from_internet($url);
++         $self->_cacheObj->set($self->code.'_'.$vi, $page, $self->_cache_exp) if $self->_cache;
++     }
++     
++     if ($page =~ /IMDbPlayer\.playerKey = "(http:.*?)"/)
++     {
++         # The Javascript contained the URL to use.
++         return $1;
++     }
++ 
++     return undef;
++ }
++ 
+  =item company()
+  
+  Returns an company given for a specified movie:

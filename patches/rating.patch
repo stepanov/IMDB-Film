@@ -1,0 +1,39 @@
+--- .cpan/perl/share/perl/5.10.0/IMDB/Film.pm   2010-03-17 13:25:45.000000000 +0100
++++ .cpan/perl/share/perl/5.10.0/IMDB/Film.pm   2010-03-17 22:03:44.000000000 +0100
+@@ -932,27 +932,27 @@
+               my $parser = $self->_parser(FORCED);
+
+               while(my $tag = $parser->get_tag(MAIN_TAG)) {
+                       last if $parser->get_text =~ /^User Rating/i;
+               }
++
++               # Try to retrieve TOP info
++               my $top_info;
++               while(my $tag = $parser->get_tag()) {
++
++                       $top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/top\?#;
++
++                       last if $tag -> [0] eq 'div' && $tag -> [1] {'id'} && $tag -> [1] {'id'} eq 'general-voting-stars';
++               }
+
+               my $tag = $parser->get_tag('b');
+               my $text = $parser->get_trimmed_text('b', '/a');
+
+               $self->_show_message("Rating text is [$text]; tag: " . Dumper($tag), 'DEBUG');
+
+               my($rating, $val) = $text =~ m!(\d+\.?\d*)/10.*?(\d+,?\d*)!;
+               $val =~ s/\,// if $val;
+-               my $top_info;
+-
+-               # Try to retrieve TOP info
+-               while(my $tag = $parser->get_tag()) {
+-
+-                       $top_info = $parser->get_text if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ m#/chart/top\?#;
+-
+-                       last if $tag->[0] eq 'h5' && $parser->get_text =~ /MOVIEmeter/i;
+-               }
+
+               $self->{_rating} = [$rating, $val, $top_info];
+       }
+
+       return wantarray ? @{ $self->{_rating} } : $self->{_rating}[0];

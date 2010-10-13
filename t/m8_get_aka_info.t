@@ -9,9 +9,9 @@ use IMDB::Film;
 my $film = new IMDB::Film(crit => '0341266');
 
 is($film->title, 'Bhoot', 'Movie title');
-is(scalar(@{$film->also_known_as}), 2, 'Also known as info');
+is($film->also_known_as->[0], 'Ghost', 'Also known as info');
 
 $film = new IMDB::Film(crit => '0403358');
 
-like($film->title, qr/nochnoy dozor/i, 'Movie title');
-ok(scalar(@{$film->also_known_as}) >= 1, 'Also known as info');
+like($film->title, qr/nochnoi dozor/i, 'Movie title');
+is($film->also_known_as->[0], 'Guardianes de la noche', 'Also known as info');
