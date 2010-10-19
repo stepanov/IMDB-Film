@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 18;
+use Test::More tests => 19;
 
 use IMDB::Film;
 
@@ -15,7 +15,8 @@ my %films = (
 		country 		=> [qw(USA Malta UK)],
 		language		=> [qw(English)],
 		company			=> 'Warner Bros. Pictures',
-		plot			=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnom to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles, and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad.},
+		plot			=> qq{An adaptation of Homer's great epic, the film follows the assault on Troy by the united Greek forces and chronicles the fates of the men involved.},
+		storyline		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnom to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles, and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad.},
 		full_plot		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnom to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles, and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad."},
 		cover			=> qq{MV5BMTU1MjM4NTA5Nl5BMl5BanBnXkFtZTcwOTE3NzA1MQ@@._V1._SX100_SY114_.jpg},
 		cast			=> [{ 	id => '0002103', name => 'Julian Glover', role => 'Triopas'},	
@@ -54,6 +55,7 @@ is($obj->id, $films{id}, 'Movie IMDB ID');
 is($obj->title, $films{title}, 'Movie Title');
 is($obj->year, $films{year}, 'Movie Production Year');
 like($obj->plot, qr/$films{plot}/, 'Movie Plot');
+like($obj->storyline, qr/$films{storyline}/, 'Movie Plot');
 like($obj->cover, '/\.jpg/i', 'Movie Cover');
 is_deeply($obj->cast, $films{cast}, 'Movie Cast');
 is($obj->language->[0], $films{language}[0], 'Movie Language');

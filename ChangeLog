@@ -1,5 +1,14 @@
 Revision history for Perl module IMDB::Film
 
+0.48 Oct 19 2010
+	- fixed bug with retrieving of movie cover if the title contains special HTML symbols, ticket #62254;
+	- added returning of default IMDB image in case if movie doesn't have a cover;
+	- fixed issue with retrieving of movie's plot;
+	- added a new method - storyline;
+	- fixed bug with return of movie's kind;
+	- fixed issue with not completed year period, i.e 2004-, ticket #62174;
+		- added a few new tests.
+
 0.47 Oct 12 2010
 	- fixed module functionality according to new IMDB design.
 

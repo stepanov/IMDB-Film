@@ -88,6 +88,7 @@ use fields qw(	_title
 				_plot_keywords
 				_big_cover_url
 				_big_cover_page
+				_storyline
 				full_plot_url
 		);
 	
@@ -101,7 +102,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.47';
+		$VERSION = '0.48';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -374,9 +375,9 @@ sub title {
 			# TODO: implement parsing of TV series like ALF (TV Series 1986–1990)
 			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\((\d{4})\)(?:\s\((\w*)\))?!;
 			unless($self->{_title}) {
-				($self->{_title}, $self->{_kind}, $self->{_year}) = $title =~ m!(.*?)\s+\((.*?)?\s?([0-9\-]*)\)!;
+				($self->{_title}, $self->{_kind}, $self->{_year}) = $title =~ m!(.*?)\s+\((.*?)?\s?([0-9\-]*\s?)\)!;
 			}
-			$self->{_kind} = '' unless $self->{_kind};
+			$self->{_kind} = 'Movie' unless $self->{_kind}; # Default kind should be movie
 			
        		# "The Series" An Episode (2005)
 			# "The Series" (2005)
@@ -401,7 +402,7 @@ Get kind of movie:
 
 sub kind {
 	my CLASS_NAME $self = shift;
-	return $FILM_KIND{$self->{_kind}};
+	return exists $FILM_KIND{$self->{_kind}} ? $FILM_KIND{$self->{_kind}} : $self->{_kind};
 }
 
 =item year()
@@ -702,7 +703,7 @@ sub cover {
 		
 			last if $img_tag->[1]{alt} =~ /^poster not submitted/i;			
 
-			if($img_tag->[1]{alt} =~ /^$title Poster$/i) {
+			if($self->_decode_special_symbols($img_tag->[1]{alt}) =~ /^($title Poster|Add a poster for $title)$/i) {
 				$cover = $img_tag->[1]{src};
 				last;
 			}
@@ -916,13 +917,27 @@ sub tagline {
 
 =item plot()
 
-Retrieve film plot summary:
+Returns a movie plot:
 
-	my $plot = $film->plot();
+	my $plot = $film->plot;
 
 =cut
 
 sub plot {
+	my CLASS_NAME $self = shift;
+
+	return $self->{_plot};
+}
+
+=item storyline()
+
+Retrieve film plot summary:
+
+	my $storyline = $film->storyline();
+
+=cut
+
+sub storyline {
 	my CLASS_NAME $self = shift;
 	my $forced = shift || 0;
 
@@ -934,25 +949,27 @@ sub plot {
 		}
  		
 		my $plot = $parser->get_trimmed_text(MAIN_TAG, 'em');
-		$self->{_plot} = $self->_decode_special_symbols($plot);
+		$self->{_storyline} = $self->_decode_special_symbols($plot);
 
 		$parser->get_tag('a');
 	}	
 
-	return $self->{_plot};
+	return $self->{_storyline};
 }
 
 =item rating()
 
 In scalar context returns film user rating, in array context returns 
-film rating, number of votes and info about place in TOP 250 or some other TOP:
+film rating, number of votes and info about place in TOP 250 or some other TOP and avards:
 
 	my $rating = $film->rating();
 
 	or
 
-	my($rating, $vnum, $top_info) = $film->rating();
+	my($rating, $vnum, $avards) = $film->rating();
 	print "RATING: $rating ($vnum votes)";
+
+Note, that $avards is array reference where the first elemen is a TOP info if so, and the next element is other avards - Oscar, nominations and etc	
 
 =cut
 
@@ -973,6 +990,12 @@ sub rating {
 		$val =~ s/\,// if $val;
 		
 		$self->{_rating} = [$rating, $val, $self->top_info];
+
+		unless($self->{_plot}) {
+			my $tag = $parser->get_tag('p');
+			my $text = $parser->get_trimmed_text('/p');
+			$self->{_plot} = $text;
+		}
 	}
 
 	return wantarray ? @{ $self->{_rating} } : $self->{_rating}[0];
