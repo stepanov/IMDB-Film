@@ -102,7 +102,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.48';
+		$VERSION = '0.49';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -373,7 +373,7 @@ sub title {
 			$self->_show_message("title: $title", 'DEBUG');
 
 			# TODO: implement parsing of TV series like ALF (TV Series 1986–1990)
-			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\((\d{4})\)(?:\s\((\w*)\))?!;
+			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\((\d{4})(?:/[IVX]+)\)(?:\s\((\w*)\))?!;
 			unless($self->{_title}) {
 				($self->{_title}, $self->{_kind}, $self->{_year}) = $title =~ m!(.*?)\s+\((.*?)?\s?([0-9\-]*\s?)\)!;
 			}
@@ -402,7 +402,7 @@ Get kind of movie:
 
 sub kind {
 	my CLASS_NAME $self = shift;
-	return exists $FILM_KIND{$self->{_kind}} ? $FILM_KIND{$self->{_kind}} : $self->{_kind};
+	return exists $FILM_KIND{$self->{_kind}} ? $FILM_KIND{$self->{_kind}} : lc($self->{_kind});
 }
 
 =item year()
@@ -596,7 +596,7 @@ Retrieve episodes info list each element of which is hash reference for tv serie
 sub episodes {
 	my CLASS_NAME $self = shift;
 
-	return if !$self->kind or $self->kind ne "tv series";
+	return if !$self->kind or $self->kind !~ /tv serie/i;
 
 	unless($self->{_episodes}) {
 		my $page;
@@ -950,8 +950,6 @@ sub storyline {
  		
 		my $plot = $parser->get_trimmed_text(MAIN_TAG, 'em');
 		$self->{_storyline} = $self->_decode_special_symbols($plot);
-
-		$parser->get_tag('a');
 	}	
 
 	return $self->{_storyline};
@@ -985,12 +983,12 @@ sub rating {
 		}
 		
 		my $text = $parser->get_trimmed_text('/a');
-		
+
 		my($rating, $val) = $text =~ m!(\d+\.?\d*)/10.*?(\d+,?\d*)!;
 		$val =~ s/\,// if $val;
 		
 		$self->{_rating} = [$rating, $val, $self->top_info];
-
+		
 		unless($self->{_plot}) {
 			my $tag = $parser->get_tag('p');
 			my $text = $parser->get_trimmed_text('/p');

@@ -13,5 +13,5 @@ is($film->also_known_as->[0], 'Ghost', 'Also known as info');
 
 $film = new IMDB::Film(crit => '0403358');
 
-like($film->title, qr/nochnoi dozor/i, 'Movie title');
+like($film->title, qr/(nochnoi dozor|Night Watch)/i, 'Movie title');
 is($film->also_known_as->[0], 'Guardianes de la noche', 'Also known as info');

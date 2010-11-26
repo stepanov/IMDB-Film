@@ -1,5 +1,12 @@
 Revision history for Perl module IMDB::Film
 
+0.49 Nov 25 2010
+	- fixed issue with returning the episodes of TV series;
+	- made movie kind low case to have back compatibility;
+	- fixed retrieving year of movie;
+	- fixed retrieving bio of the movie person;
+	- fixed tests;
+
 0.48 Oct 19 2010
 	- fixed bug with retrieving of movie cover if the title contains special HTML symbols, ticket #62254;
 	- added returning of default IMDB image in case if movie doesn't have a cover;

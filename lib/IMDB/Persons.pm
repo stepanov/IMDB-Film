@@ -70,7 +70,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h4';
 
 BEGIN {
-	$VERSION = '0.48';
+	$VERSION = '0.49';
 }
 
 {
@@ -204,10 +204,11 @@ sub mini_bio {
 	my CLASS_NAME $self = shift;
 	if(!defined $self->{_mini_bio}) {
 		my $parser = $self->_parser(FORCED);
-		while(my $tag = $parser->get_tag('td') ) {
-			last if $tag->[1]->{id} && $tag->[1]->{id} eq 'overview-top';
+		while(my $tag = $parser->get_tag('div') ) {
+			last if $tag->[1]->{class} && $tag->[1]->{class} eq 'infobar';
 		}
 		
+		my $tag = $parser->get_tag('p');
 		$self->{'_mini_bio'} = $parser->get_trimmed_text('span');
 	}
 	return $self->{'_mini_bio'};

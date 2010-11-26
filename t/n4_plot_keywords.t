@@ -15,6 +15,6 @@ my $obj = new IMDB::Film(%pars);
 
 my $plot_keywords = $obj->plot_keywords();
 
-is($plot_keywords->[0], 'Trojan', 'First plot keyword');
-is($plot_keywords->[4], 'Epic', '5th plot keyword');
-is($plot_keywords->[9], 'Queen', '10th plot keyword');
+is($plot_keywords->[0], 'Troy', 'First plot keyword');
+is($plot_keywords->[4], 'Fate', '5th plot keyword');
+is($plot_keywords->[9], 'Bronze Age', '10th plot keyword');

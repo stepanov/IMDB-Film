@@ -17,5 +17,5 @@ is($film->cover, 'http://ia.media-imdb.com/images/M/MV5BMTczOTA3MzY2N15BMl5BanBn
 
 # Test for movie without cover - Two Gentlemen Sharing
 $film = new IMDB::Film(crit => '0065133');
-is($film->cover, 'http://i.media-imdb.com/images/SFb1690fcbf083b9bf07c2d17412f72229/nopicture/large/film.png', 'Movie wihtout cover');
+is($film->cover, undef, 'Movie wihtout cover');
 

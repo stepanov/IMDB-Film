@@ -4,7 +4,7 @@
 
 use strict;
 
-use Test::More tests => 17;
+use Test::More tests => 19;
 use IMDB::Film;
 
 my %default_pars = (debug => 0, cache => 0);
@@ -53,3 +53,9 @@ is($obj->title, 300, 'Movie Title');
 # Check cover for the non-English movies
 $obj = new IMDB::Film(%default_pars, crit => '0100263');
 is($obj->cover, 'http://ia.media-imdb.com/images/M/MV5BMjU5NjMxNDM1Ml5BMl5BanBnXkFtZTYwODAwNzk5._V1._SY314_CR3,0,214,314_.jpg', 'Non-English movie cover');
+
+# Chek episodes
+$obj = new IMDB::Film(%default_pars, crit => 'the office us');
+my $episodes = $obj->episodes();
+is($obj->code, '0386676', 'Movie ID');
+cmp_ok(scalar(@$episodes), '>', 0, 'Number of episodes')
