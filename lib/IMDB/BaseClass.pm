@@ -33,7 +33,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.49';
+	$VERSION = '0.50';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -423,6 +423,8 @@ sub _get_page_from_internet {
 	my $url = shift;
 	
 	$self->_show_message("URL is [$url]...", 'DEBUG');
+	
+	print "Calling URL: $url!\n";
 
 	my $page = get($url);
 

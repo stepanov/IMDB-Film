@@ -1,5 +1,12 @@
 Revision history for Perl module IMDB::Film
 
+0.50 Aug 09 2011
+	- fixed retrieving of movie rating (ticket #69049);
+	- fixed returning of MPAA rating;
+	- fixed parsing of movie title;
+	- fixed parsing of person name;
+	- fixed variuos tests.
+
 0.49 Nov 25 2010
 	- fixed issue with returning the episodes of TV series;
 	- made movie kind low case to have back compatibility;

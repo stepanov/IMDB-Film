@@ -11,7 +11,7 @@ my $film = new IMDB::Film(crit => '0113277');
 is($film->title, 'Heat', 'Movie title');
 like($film->trivia, qr/.+/, 'Movie trivia');
 like($film->goofs, qr/.+/, 'Movie goofs');
-is($film->awards->[1], '6 nominations', 'Movie avards');
+like($film->awards->[1], '/\d nominations/', 'Movie avards');
 is($film->aspect_ratio, '2.35 : 1', 'Movie Aspect Ratio');
 
 # Test movie without aka info

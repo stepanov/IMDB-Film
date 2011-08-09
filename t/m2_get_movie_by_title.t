@@ -12,7 +12,7 @@ my %films = (
 		title   		=> 'Troy',
 		year    		=> '2004',
 		genres			=> [qw(Action Drama War Adventure Romance)],
-		country 		=> [qw(UK Malta USA)],
+		country 		=> [qw(Malta UK USA)],
 		language		=> [qw(English)],
 		company			=> 'Warner Bros. Pictures',
 		plot			=> qq{An adaptation of Homer's great epic, the film follows the assault on Troy by the united Greek forces and chronicles the fates of the men involved.},
@@ -50,6 +50,8 @@ my %pars = (cache => 0, debug => 0, crit => $crit);
 my $obj = new IMDB::Film(%pars);
 isa_ok($obj, 'IMDB::Film');	
 
+my @countries = sort(@{$obj->country});
+
 is($obj->code, $films{code}, 'Movie IMDB Code');
 is($obj->id, $films{id}, 'Movie IMDB ID');
 is($obj->title, $films{title}, 'Movie Title');
@@ -59,7 +61,7 @@ like($obj->storyline, qr/$films{storyline}/, 'Movie Plot');
 like($obj->cover, '/\.jpg/i', 'Movie Cover');
 is_deeply($obj->cast, $films{cast}, 'Movie Cast');
 is($obj->language->[0], $films{language}[0], 'Movie Language');
-is($obj->country->[0], $films{country}[0], 'Movie Country');
+is($countries[0], $films{country}[0], 'Movie Country');
 is($obj->genres->[0], $films{genres}[0], 'Movie Genre');
 like($obj->full_plot, qr/$films{full_plot}/, 'Movie full plot');
 is($obj->duration, $films{duration}, 'Movie Duration');

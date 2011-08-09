@@ -70,7 +70,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h4';
 
 BEGIN {
-	$VERSION = '0.49';
+	$VERSION = '0.50';
 }
 
 {
@@ -186,6 +186,7 @@ sub name {
 			$self->error('Not Found');
 		}
 
+		$title =~ s/^imdb\s+\-\s+//i;
 		$self->{'_name'} = $title;
 	}
 
@@ -209,7 +210,7 @@ sub mini_bio {
 		}
 		
 		my $tag = $parser->get_tag('p');
-		$self->{'_mini_bio'} = $parser->get_trimmed_text('span');
+		$self->{'_mini_bio'} = $parser->get_trimmed_text('a');
 	}
 	return $self->{'_mini_bio'};
 }
@@ -243,7 +244,7 @@ sub date_of_birth {
 				next unless $text;
 
 				SWITCH: for($tag->[1]->{href}) {
-					/date/i && do { $date = $text; $date =~ s#(\w+)\s(\d+)#$2 $1#; last SWITCH; };
+					/birth_monthday/i && do { $date = $text; $date =~ s#(\w+)\s(\d+)#$2 $1#; last SWITCH; };
 					/birth_year/i && do { $year = $text; last SWITCH; };
 					/birth_place/i && do { $place = $text; last SWITCH; };
 				}

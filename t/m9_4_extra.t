@@ -52,7 +52,7 @@ is($obj->title, 300, 'Movie Title');
 
 # Check cover for the non-English movies
 $obj = new IMDB::Film(%default_pars, crit => '0100263');
-is($obj->cover, 'http://ia.media-imdb.com/images/M/MV5BMjU5NjMxNDM1Ml5BMl5BanBnXkFtZTYwODAwNzk5._V1._SY314_CR3,0,214,314_.jpg', 'Non-English movie cover');
+like($obj->cover, '/\.jpg/i', 'Non-English movie cover');
 
 # Chek episodes
 $obj = new IMDB::Film(%default_pars, crit => 'the office us');

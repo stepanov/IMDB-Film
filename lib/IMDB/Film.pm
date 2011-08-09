@@ -102,7 +102,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.49';
+		$VERSION = '0.50';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -373,6 +373,7 @@ sub title {
 			$self->_show_message("title: $title", 'DEBUG');
 
 			# TODO: implement parsing of TV series like ALF (TV Series 1986–1990)
+			$title =~ s/^imdb\s+\-\s+//i;
 			($self->{_title}, $self->{_year}, $self->{_kind}) = $title =~ m!(.*?)\s+\((\d{4})(?:/[IVX]+)\)(?:\s\((\w*)\))?!;
 			unless($self->{_title}) {
 				($self->{_title}, $self->{_kind}, $self->{_year}) = $title =~ m!(.*?)\s+\((.*?)?\s?([0-9\-]*\s?)\)!;
@@ -979,7 +980,7 @@ sub rating {
 		my $parser = $self->_parser(FORCED);
 	
 		while(my $tag = $parser->get_tag('span')) {
-			last if $tag->[1]{id} && $tag->[1]{id} eq 'star-bar-user-rate';
+			last if $tag->[1]{class} && $tag->[1]{class} eq 'star-bar-user-rate';
 		}
 		
 		my $text = $parser->get_trimmed_text('/a');
@@ -1241,7 +1242,7 @@ sub mpaa_info {
             last if $text =~ /^Motion Picture Rating/i;
         }
 
-		my $mpaa = $parser->get_trimmed_text('span');
+		my $mpaa = $parser->get_trimmed_text('/span');
 		$mpaa =~ s/^\)\s//;
 		$self->{_mpaa_info} = $mpaa;
 	}
