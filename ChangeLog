@@ -1,5 +1,9 @@
 Revision history for Perl module IMDB::Film
 
+0.51 Sep 28 2011
+	- fixed retrieving of moive rating (ticket #71117);
+	- fixed official movie sites test.
+
 0.50 Aug 09 2011
 	- fixed retrieving of movie rating (ticket #69049);
 	- fixed returning of MPAA rating;

@@ -102,7 +102,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.50';
+		$VERSION = '0.51';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -979,8 +979,8 @@ sub rating {
 	if($forced) {
 		my $parser = $self->_parser(FORCED);
 	
-		while(my $tag = $parser->get_tag('span')) {
-			last if $tag->[1]{class} && $tag->[1]{class} eq 'star-bar-user-rate';
+		while(my $tag = $parser->get_tag('div')) {
+			last if $tag->[1]{class} && $tag->[1]{class} eq 'star-box-details';
 		}
 		
 		my $text = $parser->get_trimmed_text('/a');
@@ -1548,8 +1548,8 @@ sub plot_keywords {
 		while(my $tag = $parser->get_tag('a')) {
 			my $text = $parser->get_text(); 
 			$text = $self->_decode_special_symbols($text);
-			$self->_show_message("*** $tag->[1]->{href} --> $text ***", 'DEBUG');
-			push @keywords, $text if $tag->[1]->{href} =~ m#/keyword/#;
+			#$self->_show_message("*** $tag->[1]->{href} --> $text ***", 'DEBUG');
+			push @keywords, $text if $tag->[1]->{href} && $tag->[1]->{href} =~ m#/keyword/#;
 		}
 
 		$self->{_plot_keywords} = \@keywords;

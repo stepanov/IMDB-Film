@@ -9,9 +9,9 @@ use IMDB::Film;
 
 my $crit = '0332452';
 my $sites = [
-	{"http://troymovie.warnerbros.com/index_flash.html" => "Warner Brothers"},
-	{"http://www.troy.jp/" => "Warner Bros. [jp]"},
 	{"http://www.warnerbros.fr/movies/troy/" => "Warner Bros [fr]"},
+	{"http://www.troy.jp/" => "Warner Bros. [jp]"},
+	{"http://troymovie.warnerbros.com/index_flash.html" => "Warner Brothers"},
 ];
 
 my %pars = (cache => 0, debug => 0, crit => $crit);
