@@ -1,0 +1,30 @@
+diff --git a/lib/IMDB/Film.pm b/lib/IMDB/Film.pm
+index f6b24d8..b3368cc 100644
+--- a/lib/IMDB/Film.pm
++++ b/lib/IMDB/Film.pm
+@@ -604,7 +604,7 @@ sub episodes {
+ 		$page = $self->_cacheObj->get($self->code . '_episodes') if $self->_cache;
+ 
+ 		unless($page) {
+-			my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/episodes";
++			my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/epcast";
+ 			$self->_show_message("URL for episodes is $url ...", 'DEBUG');
+ 
+ 			$page = $self->_get_page_from_internet($url);
+@@ -612,14 +612,14 @@ sub episodes {
+ 		}
+ 
+ 		my $parser = $self->_parser(FORCED, \$page);
+-		while(my $tag = $parser->get_tag('h3')) {
++		while(my $tag = $parser->get_tag('h4')) {
+ 			my $id;
+             my($season, $episode);
+             next unless(($season, $episode) = $parser->get_text =~ /Season\s+(.*?),\s+Episode\s+([^:]+)/); 
+ 			my $imdb_tag = $parser->get_tag('a');
+ 			($id) = $imdb_tag->[1]->{href} =~ /(\d+)/ if $imdb_tag->[1]->{href};
+ 			my $title = $parser->get_trimmed_text;
+-			$parser->get_tag('strong');
++			$parser->get_tag('b');
+ 			my($date) = $parser->get_trimmed_text;
+ 			$parser->get_tag('br');
+ 			my $plot = $parser->get_trimmed_text;

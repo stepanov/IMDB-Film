@@ -5,6 +5,7 @@
 use strict;
 
 use Test::More tests => 5;
+use lib '/home/michael/work/Perl/myCPAN/IMDB-Film/lib';
 use IMDB::Film;
 
 use Data::Dumper;

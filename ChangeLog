@@ -1,5 +1,9 @@
 Revision history for Perl module IMDB::Film
 
+0.52 Apr 30 2012
+	- fixed retrieving episodes of TV series following IMDB change (ticket #74679) [ARJONES];
+	- fixed issue with movie connection parsing.
+
 0.51 Sep 28 2011
 	- fixed retrieving of moive rating (ticket #71117);
 	- fixed official movie sites test.
