@@ -7,7 +7,6 @@ installdirs:  site
 requires:
     Cache::FileCache:              0
     Carp:                          0
-    Digest::SHA1:                  0
     Error:                         0
     HTML::TokeParser:              2.28
     LWP::Simple:                   1.41
