@@ -1,7 +1,5 @@
 Revision history for Perl module IMDB::Film
 
-0.54 Jan 14 2013
-
 0.53 Jan 04 2013
 	- fixed search functionality;
 	- fixed parsing of movie data.

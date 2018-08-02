@@ -102,7 +102,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.54';
+		$VERSION = '0.53';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
