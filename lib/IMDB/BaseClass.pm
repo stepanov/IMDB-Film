@@ -33,7 +33,7 @@ use constant ID_LENGTH	=> 6;
 use vars qw($VERSION %FIELDS $AUTOLOAD %STATUS_DESCR);
 
 BEGIN {
-	$VERSION = '0.51';
+	$VERSION = '0.54';
 
 	%STATUS_DESCR = (
 		0 => 'Empty',
@@ -69,6 +69,7 @@ use fields qw(	content
 				timeout
 				user_agent
 				decode_html
+				exact
 				_code
 	);
 
@@ -348,6 +349,12 @@ sub _search {
 	return $self->{search}
 }
 
+sub _exact {
+	my CLASS_NAME $self = shift;
+	if(@_) { $self->{exact} = shift }
+	return $self->{exact};
+}
+
 =item _debug()
 
 Indicate to use DEBUG mode to display some debug messages:
@@ -400,7 +407,7 @@ sub _content {
 				$self->_show_message("Retrieving page from internet ...", 'DEBUG');
 					
 				my $url = 'http://'.$self->_host().'/'.
-						( $crit =~ /^\d+$/ && length($crit) >= ID_LENGTH ? $self->_query() : $self->_search() ).$crit;				
+						($crit =~ /^\d+$/ && length($crit) >= ID_LENGTH ? $self->_query() : $self->_search()) . $crit;				
 				
 				$page = $self->_get_page_from_internet($url);
 				$self->status(FROM_INTERNET);
@@ -423,8 +430,6 @@ sub _get_page_from_internet {
 	my $url = shift;
 	
 	$self->_show_message("URL is [$url]...", 'DEBUG');
-	
-	print "Calling URL: $url!\n";
 
 	my $page = get($url);
 
@@ -509,7 +514,7 @@ sub _search_results {
 		my $title = $parser->get_trimmed_text('a', $end_tag);
 		
 		$self->_show_message("TITLE: " . $title, 'DEBUG');
-		next if $title =~ /\[IMG\]/i or $href =~ /pro.imdb.com/;
+		next if $title =~ /\[IMG\]/i or !$href or $href =~ /pro.imdb.com/;
 		
 		# Remove garbage from the first title
 		$title =~ s/(\n|\r)//g;

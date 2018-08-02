@@ -55,7 +55,7 @@ $obj = new IMDB::Film(%default_pars, crit => '0100263');
 like($obj->cover, '/\.jpg/i', 'Non-English movie cover');
 
 # Chek episodes
-$obj = new IMDB::Film(%default_pars, crit => 'the office us');
+$obj = new IMDB::Film(%default_pars, crit => 'the office');
 my $episodes = $obj->episodes();
 is($obj->code, '0386676', 'Movie ID');
 cmp_ok(scalar(@$episodes), '>', 0, 'Number of episodes')

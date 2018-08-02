@@ -4,7 +4,7 @@ use Test::More tests => 2;
 
 use IMDB::Film;
 
-my $crit = 'jonny zer';
+my $crit = 'Jonny Zero';
 my %pars = (cache => 0, debug => 0, crit => $crit);
 
 my $obj = new IMDB::Film(%pars);

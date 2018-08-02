@@ -102,7 +102,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.51';
+		$VERSION = '0.54';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -133,7 +133,7 @@ BEGIN {
 		matched			=> [],
         host			=> 'www.imdb.com',
         query			=> 'title/tt',
-        search 			=> 'find?s=tt;q=',	
+        search 			=> 'find?s=tt&exact=true&q=',	
 		status			=> 0,		
 		timeout			=> 10,
 		user_agent		=> 'Mozilla/5.0',
@@ -360,7 +360,7 @@ sub title {
 	
 		$parser->get_tag('title');
 		my $title = $parser->get_text();
-		if($title =~ /imdb\s+title\s+search/i) {
+		if($title =~ /Find \- IMDb/i) {
 			$self->_show_message("Go to search page ...", 'DEBUG');
 			$title = $self->_search_film($args);				
 		} 
@@ -444,7 +444,7 @@ sub connections {
     	$page = $self->_cacheObj->get($self->code . '_connections') if $self->_cache;
 
     	unless($page) {
-      		my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/movieconnections";
+      		my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/trivia?tab=mc";
       		$self->_show_message("URL for movie connections is $url ...", 'DEBUG');
 
       		$page = $self->_get_page_from_internet($url);
@@ -455,20 +455,23 @@ sub connections {
 
     	my $group = undef;
     	my %result;
-    	my @lookFor = ('h5');
+    	my @lookFor = ('h4');
    	 	while (my $tag = $parser->get_tag(@lookFor)) {
-      		if ($tag->[0] eq 'h5') {
-        		$group = $parser->get_text;
+      		if ($tag->[0] eq 'h4') {
+        		$group = HTML::Entities::encode_entities($parser->get_text);
 				$group = lc($group);
 				$group =~ s/\s+/_/g;
+				$group =~ s/(&nbsp;|\?|\:)//;
+				$group =~ s/&amp;/and/;
         		$result{$group} = [];
-        		@lookFor = ('h5', 'a', 'hr', 'hr/');
+        		@lookFor = ('h4', 'a', 'hr', 'hr/');
       		} elsif ($tag->[0] eq 'a') {
-        		my($id) = $tag->[1]->{href} =~ /(\d+)/;
+        		my $id;
+				($id)= $tag->[1]->{href} =~ /(\d+)/ if $tag->[1]->{href};
         		my $name = $parser->get_trimmed_text;
 
         		# Handle series episodes (usually in 'referenced' sections)
-        		my($series,$t,$s,$e) = ($name =~ /^"(.*?): *(.*?) *\(?#(\d+)\.(\d+)\)?"$/);
+        		my($series,$t,$s,$e) = ($name =~ /^(.*?): *(.*?) *\(?#(\d+)\.(\d+)\)?$/);
           		$name = $series if defined $series;
         	
 				$tag = $parser->get_tag('/a');
@@ -597,14 +600,14 @@ Retrieve episodes info list each element of which is hash reference for tv serie
 sub episodes {
 	my CLASS_NAME $self = shift;
 
-	return if !$self->kind or $self->kind !~ /tv serie/i;
+	return [] if !$self->kind or $self->kind !~ /tv serie/i;
 
 	unless($self->{_episodes}) {
 		my $page;
 		$page = $self->_cacheObj->get($self->code . '_episodes') if $self->_cache;
 
 		unless($page) {
-			my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/episodes";
+			my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/epcast";
 			$self->_show_message("URL for episodes is $url ...", 'DEBUG');
 
 			$page = $self->_get_page_from_internet($url);
@@ -612,14 +615,14 @@ sub episodes {
 		}
 
 		my $parser = $self->_parser(FORCED, \$page);
-		while(my $tag = $parser->get_tag('h3')) {
+		while(my $tag = $parser->get_tag('h4')) {
 			my $id;
             my($season, $episode);
             next unless(($season, $episode) = $parser->get_text =~ /Season\s+(.*?),\s+Episode\s+([^:]+)/); 
 			my $imdb_tag = $parser->get_tag('a');
 			($id) = $imdb_tag->[1]->{href} =~ /(\d+)/ if $imdb_tag->[1]->{href};
 			my $title = $parser->get_trimmed_text;
-			$parser->get_tag('strong');
+			$parser->get_tag('b');
 			my($date) = $parser->get_trimmed_text;
 			$parser->get_tag('br');
 			my $plot = $parser->get_trimmed_text;
@@ -704,7 +707,7 @@ sub cover {
 		
 			last if $img_tag->[1]{alt} =~ /^poster not submitted/i;			
 
-			if($self->_decode_special_symbols($img_tag->[1]{alt}) =~ /^($title Poster|Add a poster for $title)$/i) {
+			if($img_tag->[1]{alt} =~ /Poster$/) {
 				$cover = $img_tag->[1]{src};
 				last;
 			}
