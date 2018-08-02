@@ -70,7 +70,7 @@ use constant CLASS_NAME => 'IMDB::Persons';
 use constant MAIN_TAG	=> 'h4';
 
 BEGIN {
-	$VERSION = '0.52';
+	$VERSION = '0.53';
 }
 
 {
@@ -82,7 +82,7 @@ BEGIN {
 		cache_exp		=> '1 h',
         host			=> 'www.imdb.com',
         query			=> 'name/nm',
-        search 			=> 'find?nm=on;mx=20;q=',		
+        search 			=> 'find?nm=on&mx=20&q=',		
 		status			=> 0,		
 		timeout			=> 10,
 		user_agent		=> 'Mozilla/5.0',

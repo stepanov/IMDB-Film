@@ -11,14 +11,14 @@ my %films = (
 		id 		   		=> '0332452',
 		title   		=> 'Troy',
 		year    		=> '2004',
-		genres			=> [qw(Action Drama War Adventure Romance)],
+		genres			=> [qw(Adventure Action Drama War Romance)],
 		country 		=> [qw(Malta UK USA)],
 		language		=> [qw(English)],
 		company			=> 'Warner Bros. Pictures',
 		duration		=> '163 min',
 		plot			=> qq{An adaptation of Homer's great epic, the film follows the assault on Troy by the united Greek forces and chronicles the fates of the men involved.},
-		storyline		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnom to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles, and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad.},
-		full_plot		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnom to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles, and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad."},
+		storyline		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband, Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnon to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad."},
+		full_plot		=> qq{It is the year 1250 B.C. during the late Bronze age. Two emerging nations begin to clash after Paris, the Trojan prince, convinces Helen, Queen of Sparta, to leave her husband, Menelaus, and sail with him back to Troy. After Menelaus finds out that his wife was taken by the Trojans, he asks his brother Agamemnon to help him get her back. Agamemnon sees this as an opportunity for power. So they set off with 1,000 ships holding 50,000 Greeks to Troy. With the help of Achilles, the Greeks are able to fight the never before defeated Trojans. But they come to a stop by Hector, Prince of Troy. The whole movie shows their battle struggles and the foreshadowing of fate in this remake by Wolfgang Petersen of Homer's "The Iliad."},
 		cover			=> qq{MV5BMTU1MjM4NTA5Nl5BMl5BanBnXkFtZTcwOTE3NzA1MQ@@._V1._SX100_SY114_.jpg},
 		cast			=> [{ 	id => '0002103', name => 'Julian Glover', role => 'Triopas'},	
 							{	id => '0004051', name => 'Brian Cox', role => 'Agamemnon'},	
@@ -49,18 +49,19 @@ my $obj = new IMDB::Film(%pars);
 isa_ok($obj, 'IMDB::Film');	
 
 my @countries = sort(@{$obj->country});
+my @genres = sort(@{$obj->genres});
 
 is($obj->code, $films{code}, 'Movie IMDB Code');
 is($obj->id, $films{id}, 'Movie IMDB ID');
 is($obj->title, $films{title}, 'Movie Title');
 is($obj->year, $films{year}, 'Movie Production Year');
 like($obj->plot, qr/$films{plot}/, 'Movie Plot');
-like($obj->storyline, qr/$films{storyline}/, 'Movie Plot');
+like($obj->storyline, qr/$films{storyline}/, 'Movie Storyline');
 like($obj->cover, '/\.jpg/i', 'Movie Cover');
 is_deeply($obj->cast, $films{cast}, 'Movie Cast');
 is($obj->language->[0], $films{language}[0], 'Movie Language');
 is($countries[0], $films{country}[0], 'Movie Country');
-is($obj->genres->[0], $films{genres}[0], 'Movie Genre');
+is($genres[0], $films{genres}[0], 'Movie Genre');
 like($obj->full_plot, qr/$films{full_plot}/, 'Movie full plot');
 is($obj->duration, $films{duration}, 'Movie Duration');
 is($obj->mpaa_info, $films{mpaa_info}, 'MPAA');

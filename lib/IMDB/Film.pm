@@ -102,7 +102,7 @@ use constant EMPTY_OBJECT	=> 0;
 use constant MAIN_TAG		=> 'h4';
 
 BEGIN {
-		$VERSION = '0.52';
+		$VERSION = '0.53';
 						
 		# Convert age gradation to the digits		
 		# TODO: Store this info into constant file
@@ -133,7 +133,7 @@ BEGIN {
 		matched			=> [],
         host			=> 'www.imdb.com',
         query			=> 'title/tt',
-        search 			=> 'find?s=tt;q=',	
+        search 			=> 'find?s=tt&exact=true&q=',	
 		status			=> 0,		
 		timeout			=> 10,
 		user_agent		=> 'Mozilla/5.0',
@@ -360,7 +360,7 @@ sub title {
 	
 		$parser->get_tag('title');
 		my $title = $parser->get_text();
-		if($title =~ /imdb\s+title\s+search/i) {
+		if($title =~ /Find \- IMDb/i) {
 			$self->_show_message("Go to search page ...", 'DEBUG');
 			$title = $self->_search_film($args);				
 		} 
@@ -600,7 +600,7 @@ Retrieve episodes info list each element of which is hash reference for tv serie
 sub episodes {
 	my CLASS_NAME $self = shift;
 
-	return if !$self->kind or $self->kind !~ /tv serie/i;
+	return [] if !$self->kind or $self->kind !~ /tv serie/i;
 
 	unless($self->{_episodes}) {
 		my $page;
@@ -707,7 +707,7 @@ sub cover {
 		
 			last if $img_tag->[1]{alt} =~ /^poster not submitted/i;			
 
-			if($self->_decode_special_symbols($img_tag->[1]{alt}) =~ /^($title Poster|Add a poster for $title)$/i) {
+			if($img_tag->[1]{alt} =~ /Poster$/) {
 				$cover = $img_tag->[1]{src};
 				last;
 			}
