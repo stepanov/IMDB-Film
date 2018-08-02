@@ -139,7 +139,7 @@ BEGIN {
 		timeout			=> 10,
 		user_agent		=> 'Mozilla/5.0',
 		decode_html		=> 1,
-		full_plot_url	=> 'http://www.imdb.com/rg/title-tease/plotsummary/title/tt',		
+		full_plot_url	=> 'https://www.imdb.com/rg/title-tease/plotsummary/title/tt',		
 		_also_known_as	=> [],
 		_official_sites	=> [],
 		_release_dates	=> [],
@@ -221,7 +221,7 @@ Define a movie's year. It's useful to use it to get the proper movie by its titl
 
 defines proxy server name and port:
 
-	proxy => 'http://proxy.myhost.com:80'
+	proxy => 'https://proxy.myhost.com:80'
 
 By default object tries to get proxy from environment
 
@@ -368,7 +368,7 @@ sub title {
 		} 
 		
 		if($title) {
-			$self->retrieve_code($parser, 'http://www.imdb.com/title/tt(\d+)') unless $self->code;
+			$self->retrieve_code($parser, 'https://www.imdb.com/title/tt(\d+)') unless $self->code;
 			$title =~ s/\*/\\*/g;
 			$title = $self->_decode_special_symbols($title);
 			
@@ -449,7 +449,7 @@ sub connections {
     	$page = $self->_cacheObj->get($self->code . '_connections') if $self->_cache;
 
     	unless($page) {
-      		my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/trivia?tab=mc";
+      		my $url = "https://". $self->{host} . "/" . $self->{query} .  $self->code . "/trivia?tab=mc";
       		$self->_show_message("URL for movie connections is $url ...", 'DEBUG');
 
       		$page = $self->_get_page_from_internet($url);
@@ -527,7 +527,7 @@ sub full_companies {
     	$page = $self->_cacheObj->get($self->code . '_full_companies') if $self->_cache;
 
     	unless($page) {
-      		my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/companycredits";
+      		my $url = "https://". $self->{host} . "/" . $self->{query} .  $self->code . "/companycredits";
       		$self->_show_message("URL for company credits is $url ...", 'DEBUG');
 
       		$page = $self->_get_page_from_internet($url);
@@ -612,7 +612,7 @@ sub episodes {
 		$page = $self->_cacheObj->get($self->code . '_episodes') if $self->_cache;
 
 		unless($page) {
-			my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/epcast";
+			my $url = "https://". $self->{host} . "/" . $self->{query} .  $self->code . "/epcast";
 			$self->_show_message("URL for episodes is $url ...", 'DEBUG');
 
 			$page = $self->_get_page_from_internet($url);
@@ -1034,16 +1034,14 @@ sub cast {
 		}
 		while($tag = $parser->get_tag()) {
 			last if $tag->[0] eq 'a' && $tag->[1]{href} && $tag->[1]{href} =~ /fullcredits/i;
-	#		if($tag->[0] eq 'td' && $tag->[1]{class} && $tag->[1]{class} eq 'name') {
-				$tag = $parser->get_tag('a');
-				if($tag->[1]{href} && $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
-					$person = $parser->get_text;
-					$id = $1;	
-					my $text = $parser->get_trimmed_text('/tr');
-					($role) = $text =~ /\.\.\. (.*)$/;
-					push @cast, {id => $id, name => $person, role => $role} if $person;
-				}
-	#		}
+            $tag = $parser->get_tag('a');
+            if($tag->[1]{href} && $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
+                $person = $parser->get_text;
+                $id = $1;	
+                my $text = $parser->get_trimmed_text('/tr');
+                ($role) = $text =~ /\.\.\. (.*)$/;
+                push @cast, {id => $id, name => $person, role => $role} if $person;
+            }
 		}	
 		
 		$self->{_cast} = \@cast;
@@ -1456,7 +1454,7 @@ sub big_cover {
 			}
 		}
 		if($self->{'_big_cover_page'}) {
-			my $page = $self->_get_page_from_internet('http://' . $self->{'host'} . $self->{'_big_cover_page'});
+			my $page = $self->_get_page_from_internet('https://' . $self->{'host'} . $self->{'_big_cover_page'});
 			return unless $page;
 
 			my $parser = $self->_parser(FORCED, \$page);
@@ -1492,7 +1490,7 @@ sub official_sites {
 		$page = $self->_cacheObj->get($self->code . '_sites') if $self->_cache;
 
 		unless($page) {
-			my $url = "http://". $self->{host} . "/" . $self->{query} . $self->code . "/officialsites";
+			my $url = "https://". $self->{host} . "/" . $self->{query} . $self->code . "/officialsites";
 			$self->_show_message("URL for sites is $url ...", 'DEBUG');
 
 			$page = $self->_get_page_from_internet($url);
@@ -1540,7 +1538,7 @@ sub release_dates {
 		$page = $self->_cacheObj->get($self->code . '_dates') if $self->_cache;
 
 		unless($page) {
-			my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/releaseinfo";
+			my $url = "https://". $self->{host} . "/" . $self->{query} .  $self->code . "/releaseinfo";
 			$self->_show_message("URL for sites is $url ...", 'DEBUG');
 
 			$page = $self->_get_page_from_internet($url);
@@ -1595,7 +1593,7 @@ sub plot_keywords {
 		$page = $self->_cacheObj->get($self->code . '_keywords') if $self->_cache;
 
 		unless($page) {
-			my $url = "http://". $self->{host} . "/" . $self->{query} .  $self->code . "/keywords";
+			my $url = "https://". $self->{host} . "/" . $self->{query} .  $self->code . "/keywords";
 			$self->_show_message("URL for sites is $url ...", 'DEBUG');
 
 			$page = $self->_get_page_from_internet($url);
@@ -1673,7 +1671,7 @@ To catch an exception can be used eval:
 =head1 BUGS
 
 Please, send me any found bugs by email: stepanov.michael@gmail.com or create 
-a bug report: http://rt.cpan.org/NoAuth/Bugs.html?Dist=IMDB-Film
+a bug report: https://rt.cpan.org/NoAuth/Bugs.html?Dist=IMDB-Film
 
 =head1 SEE ALSO
 
@@ -1683,7 +1681,7 @@ WWW::Yahoo::Movies
 IMDB::Movie
 HTML::TokeParser 
 
-http://videoguide.sf.net
+https://videoguide.sf.net
 
 =head1 AUTHOR
 
