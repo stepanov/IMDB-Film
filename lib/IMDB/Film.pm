@@ -378,13 +378,16 @@ sub title {
 			unless($self->{_title}) {
 				($self->{_title}, $self->{_kind}, $self->{_year}) = $title =~ m!(.*?)\s+\((.*?)?\s?([0-9\-]*\s?)\)!;
 			}
+
+			# Another whack at the year.
+			$self->{_year} = $1 if(!$self->{_year} && $title =~ /\((\d{4})\)/);
+
 			$self->{_kind} = 'Movie' unless $self->{_kind}; # Default kind should be movie
 			
-       		# "The Series" An Episode (2005)
-			# "The Series" (2005)
-       		if( $self->{_title} =~ /\"[^\"]+\"(\s+.+\s+)?/ ) {
-       			$self->{_kind} = $1 ? 'E' : 'S';
-       		}		
+            # "The Series" An Episode (2005)
+            if( $self->{_title} =~ /\"[^\"]+\"(\s+.+\s+)?/ ) {
+                $self->{_kind} = $1 ? 'E' : 'S';
+            }		
 		}	
 	}	
 	
