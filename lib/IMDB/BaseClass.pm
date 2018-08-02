@@ -24,6 +24,7 @@ use Cache::FileCache;
 use Text::Unidecode qw(unidecode);
 use HTML::Entities;
 use Carp;
+use IO::Socket::SSL;
 
 use Data::Dumper;
 
@@ -406,7 +407,7 @@ sub _content {
 			} else {
 				$self->_show_message("Retrieving page from internet ...", 'DEBUG');
 					
-				my $url = 'http://'.$self->_host().'/'.
+				my $url = 'https://'.$self->_host().'/'.
 						($crit =~ /^\d+$/ && length($crit) >= ID_LENGTH ? $self->_query() : $self->_search()) . $crit;				
 				
 				$page = $self->_get_page_from_internet($url);
@@ -431,7 +432,7 @@ sub _get_page_from_internet {
 	
 	$self->_show_message("URL is [$url]...", 'DEBUG');
 
-	my $page = get($url);
+	my $page = _get($url);
 
 	unless($page) {
 		$self->error("Cannot retieve an url: [$url]!");				
@@ -439,6 +440,23 @@ sub _get_page_from_internet {
 	}
 	
 	return $page;
+}
+
+sub _get {
+        my ($URL) = @_;
+
+        $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+
+        my $ua = LWP::UserAgent->new( ssl_opts => { verify_hostname => 0,
+                SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE,
+        });
+
+        $ua->agent('Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)'); #'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)');
+
+        my $req = HTTP::Request->new( GET => $URL);
+
+        my $response = $ua->request($req);
+        return $response->content;
 }
 
 =item _parser()
