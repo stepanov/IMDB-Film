@@ -60,6 +60,7 @@ use fields qw(	_title
 				_episodeof
 				_summary
 				_cast
+				_full_cast
 				_directors
 				_writers
 				_cover
@@ -145,6 +146,7 @@ BEGIN {
 		_duration		=> [],
 		_top_info		=> [],
 		_cast			=> [],
+		_full_cast		=> [],
 	);	
 	
 	sub _get_default_attrs { keys %_defaults }		
@@ -1048,6 +1050,58 @@ sub cast {
 	}
 
 	return $self->{_cast};
+}
+
+=item full_cast()
+
+Retrieve the full film cast list, each element of which is hash reference -
+{ id => <ID>, name => <Full Name>, role => <Role> }:
+
+	my @fullcast = @{ $film->full_cast() };
+
+=cut
+
+sub full_cast {
+	my CLASS_NAME $self = shift;
+
+	unless($self->{_full_cast}) {
+		my $page;		
+		$page = $self->_cacheObj->get($self->code.'_cast') if $self->_cache;
+		unless($page) {		
+      		my $url = "http://". $self->{host} . "/" . $self->{query} . $self->code . "/fullcredits";
+
+			$self->_show_message("URL is $url ...", 'DEBUG');
+
+            $page = $self->_get_page_from_internet($url);
+			unless($page) {
+			    return;
+			}
+			
+			$self->_cacheObj->set($self->code.'_cast', $page, $self->_cache_exp) if $self->_cache;
+		}
+		my $parser = $self->_parser(FORCED, \$page);
+
+		my (@fullcast, $tag, $person, $id, $role);
+	
+		while($tag = $parser->get_tag('table')) {
+			last if $tag->[1]->{class} && $tag->[1]->{class} =~ /^cast$/i;
+		}
+		while($tag = $parser->get_tag()) {
+			if($tag->[0] eq 'td' && $tag->[1]{class} && $tag->[1]{class} eq 'nm') {
+				$tag = $parser->get_tag('a');
+				if($tag->[1]{href} && $tag->[1]{href} =~ m#name/nm(\d+?)/#) {
+					$person = $parser->get_text;
+					$id = $1;	
+					my $text = $parser->get_trimmed_text('/tr');
+					($role) = $text =~ /.*?\s+(.*)$/;
+					push @fullcast, {id => $id, name => $person, role => $role};
+				}
+			}
+		}	
+		
+		$self->{_full_cast} = \@fullcast;
+    }
+	return $self->{_full_cast};
 }
 
 =item duration()
